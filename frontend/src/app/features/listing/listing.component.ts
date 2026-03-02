@@ -242,7 +242,8 @@ export class ListingComponent implements OnInit {
 
   goToDetail(id: number) {
     const ref = this.dialog.open(DetailDialogComponent, {
-      width: '750px',
+      width: '90vw',
+      maxWidth: '90vw',
       maxHeight: '90vh',
       data: { itemId: id },
     });

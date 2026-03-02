@@ -33,7 +33,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
 
       <mat-dialog-content>
         <div class="detail-grid">
-          <!-- Title -->
+          <!-- Row 1: Title (full width) -->
           <div class="field full-span">
             <span class="label">Title</span>
             @if (editing) {
@@ -45,7 +45,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Designation -->
+          <!-- Row 2: Designation, Type, Status, Date -->
           <div class="field">
             <span class="label">Designation</span>
             @if (editing) {
@@ -57,7 +57,21 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Status -->
+          <div class="field">
+            <span class="label">Type</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <mat-select [(ngModel)]="item.type_id">
+                  @for (t of types; track t.id) {
+                    <mat-option [value]="t.id">{{ t.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            } @else {
+              <span>{{ item.type_label }}</span>
+            }
+          </div>
+
           <div class="field">
             <span class="label">Status</span>
             @if (editing) {
@@ -75,23 +89,6 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Type -->
-          <div class="field">
-            <span class="label">Type</span>
-            @if (editing) {
-              <mat-form-field appearance="outline" class="edit-field">
-                <mat-select [(ngModel)]="item.type_id">
-                  @for (t of types; track t.id) {
-                    <mat-option [value]="t.id">{{ t.label }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-            } @else {
-              <span>{{ item.type_label }}</span>
-            }
-          </div>
-
-          <!-- Date -->
           <div class="field">
             <span class="label">Date</span>
             @if (editing) {
@@ -103,7 +100,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Owner -->
+          <!-- Row 3: Owner, Author, Project, Plant -->
           <div class="field">
             <span class="label">Owner</span>
             @if (editing) {
@@ -115,7 +112,6 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Author -->
           <div class="field">
             <span class="label">Author</span>
             @if (editing) {
@@ -127,7 +123,6 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Project -->
           <div class="field">
             <span class="label">Project</span>
             @if (editing) {
@@ -143,7 +138,6 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Plant -->
           <div class="field">
             <span class="label">Plant</span>
             @if (editing) {
@@ -159,55 +153,55 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Created -->
+          <!-- Row 4: Created + Processes side by side -->
           <div class="field">
             <span class="label">Created</span>
             <span>{{ item.created_at }}</span>
           </div>
+
+          <div class="field span-2">
+            <span class="label">Processes</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <mat-select [(ngModel)]="selectedProcessIds" multiple>
+                  @for (p of allProcesses; track p.id) {
+                    <mat-option [value]="p.id">{{ p.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            } @else {
+              <mat-chip-set>
+                @for (p of item.processes; track p.id) {
+                  <mat-chip>{{ p.label }}</mat-chip>
+                }
+                @if (item.processes.length === 0) {
+                  <span class="muted">No processes linked</span>
+                }
+              </mat-chip-set>
+            }
+          </div>
+
+          <div class="field">
+            <span class="label">Attached Files</span>
+            @if (item.files.length > 0) {
+              <mat-list dense>
+                @for (f of item.files; track f.id) {
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>
+                      {{ f.file_kind === 'IMAGE' ? 'image' : 'description' }}
+                    </mat-icon>
+                    <a matListItemTitle [href]="'/' + f.storage_path" target="_blank">
+                      {{ f.filename_original }}
+                    </a>
+                    <span matListItemLine>{{ f.file_kind }} &middot; {{ f.uploaded_at }}</span>
+                  </mat-list-item>
+                }
+              </mat-list>
+            } @else {
+              <span class="muted">No files attached</span>
+            }
+          </div>
         </div>
-
-        <mat-divider class="divider"></mat-divider>
-
-        <h3>Processes</h3>
-        @if (editing) {
-          <mat-form-field appearance="outline" class="edit-field">
-            <mat-select [(ngModel)]="selectedProcessIds" multiple>
-              @for (p of allProcesses; track p.id) {
-                <mat-option [value]="p.id">{{ p.label }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-        } @else {
-          <mat-chip-set>
-            @for (p of item.processes; track p.id) {
-              <mat-chip>{{ p.label }}</mat-chip>
-            }
-            @if (item.processes.length === 0) {
-              <span class="muted">No processes linked</span>
-            }
-          </mat-chip-set>
-        }
-
-        <mat-divider class="divider"></mat-divider>
-
-        <h3>Attached Files</h3>
-        @if (item.files.length > 0) {
-          <mat-list>
-            @for (f of item.files; track f.id) {
-              <mat-list-item>
-                <mat-icon matListItemIcon>
-                  {{ f.file_kind === 'IMAGE' ? 'image' : 'description' }}
-                </mat-icon>
-                <a matListItemTitle [href]="'/' + f.storage_path" target="_blank">
-                  {{ f.filename_original }}
-                </a>
-                <span matListItemLine>{{ f.file_kind }} &middot; {{ f.uploaded_at }}</span>
-              </mat-list-item>
-            }
-          </mat-list>
-        } @else {
-          <p class="muted">No files attached</p>
-        }
       </mat-dialog-content>
 
       <mat-dialog-actions align="end">
@@ -216,7 +210,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
           <button mat-raised-button color="primary" (click)="saveEdit()">SAVE</button>
         } @else {
           <button mat-raised-button color="primary" (click)="toggleEdit()">EDIT</button>
-          <button mat-raised-button color="primary" (click)="close()">EXIT</button>
+          <button mat-raised-button class="exit-btn" (click)="close()">EXIT</button>
         }
       </mat-dialog-actions>
     } @else {
@@ -228,10 +222,11 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
   styles: [`
     .detail-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
       gap: 16px;
     }
     .full-span { grid-column: 1 / -1; }
+    .span-2 { grid-column: span 2; }
     .field {
       display: flex;
       flex-direction: column;
@@ -246,7 +241,6 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
     .edit-field {
       width: 100%;
     }
-    .divider { margin: 20px 0; }
     .muted { color: #999; font-style: italic; }
     .status-badge {
       display: inline-block;
@@ -259,6 +253,10 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
     .status-PENDING { background: #fff8e1; color: #f57f17; }
     .status-VISIBLE { background: #e8f5e9; color: #2e7d32; }
     .status-NOT_VISIBLE { background: #eeeeee; color: #616161; }
+    .exit-btn {
+      background-color: #C3C3C3 !important;
+      color: #fff;
+    }
     mat-dialog-actions {
       padding: 12px 24px !important;
       gap: 8px;
