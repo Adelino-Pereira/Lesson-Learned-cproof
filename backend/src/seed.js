@@ -51,148 +51,184 @@ function seedIfEmpty() {
 
   const items = [
     {
-      title: 'Injection mold temperature guidelines',
-      designation: 'GL-INJ-001',
-      date: '2025-06-15',
+      title: 'Bumper injection mold cooling channel redesign',
+      designation: 'LL-INJ-001',
+      date: '2026-01-10',
       owner: 'Carlos Silva',
       author: 'Ana Rodrigues',
-      type_id: 3, // Guideline
-      project: 'PRJ-ALPHA',
-      plant: 'Leiria',
+      type_id: 5, // Lessons Learned
+      project: 'Proj-2026/001',
+      plant: 'Doureca Portugal',
       status: 'VISIBLE',
       processes: [1], // Injection
     },
     {
-      title: 'Chrome plating defect root cause analysis',
+      title: 'Chrome adhesion loss on B-pillar trim — root cause',
       designation: 'LL-CHR-001',
-      date: '2025-07-20',
-      owner: 'Miguel Costa',
-      author: 'Miguel Costa',
+      date: '2026-01-18',
+      owner: 'Andrei Popescu',
+      author: 'Andrei Popescu',
       type_id: 5, // Lessons Learned
-      project: 'PRJ-ALPHA',
-      plant: 'Leiria',
-      status: 'VISIBLE',
-      processes: [2, 5], // Chrome + Quality (multiple processes)
-    },
-    {
-      title: 'Paint booth humidity control best practice',
-      designation: 'GP-PNT-001',
-      date: '2025-08-01',
-      owner: 'Sofia Fernandes',
-      author: 'João Martins',
-      type_id: 4, // Good Practice
-      project: 'PRJ-BETA',
-      plant: 'Marinha Grande',
-      status: 'VISIBLE',
-      processes: [3], // Paint
-    },
-    {
-      title: 'Assembly line torque specification update',
-      designation: 'DOC-ASM-001',
-      date: '2025-08-10',
-      owner: 'Pedro Almeida',
-      author: 'Pedro Almeida',
-      type_id: 1, // Documentation
-      project: 'PRJ-BETA',
-      plant: 'Marinha Grande',
-      status: 'PENDING',
-      processes: [4], // Assembly
-    },
-    {
-      title: 'Quality inspection checklist for chrome parts',
-      designation: 'REC-QTY-001',
-      date: '2025-09-05',
-      owner: 'Ana Rodrigues',
-      author: 'Carlos Silva',
-      type_id: 2, // Recommendation
-      project: 'PRJ-ALPHA',
-      plant: 'Leiria',
+      project: 'Proj-2026/002',
+      plant: 'Dourdin Romania',
       status: 'VISIBLE',
       processes: [2, 5], // Chrome + Quality
     },
     {
-      title: 'Injection cycle time optimization findings',
-      designation: 'LL-INJ-002',
-      date: '2025-09-18',
-      owner: 'Carlos Silva',
-      author: 'Sofia Fernandes',
-      type_id: 5, // Lessons Learned
-      project: 'PRJ-ALPHA',
-      plant: 'Leiria',
+      title: 'Paint booth airflow calibration procedure',
+      designation: 'DOC-PNT-001',
+      date: '2026-01-25',
+      owner: 'Pierre Dumont',
+      author: 'Pierre Dumont',
+      type_id: 1, // Documentation
+      project: 'Proj-2026/003',
+      plant: 'Dourdin France',
       status: 'VISIBLE',
-      processes: [1, 5], // Injection + Quality
-    },
-    {
-      title: 'Paint adhesion failure on textured surfaces',
-      designation: 'LL-PNT-001',
-      date: '2025-10-02',
-      owner: 'João Martins',
-      author: 'João Martins',
-      type_id: 5, // Lessons Learned
-      project: 'PRJ-BETA',
-      plant: 'Marinha Grande',
-      status: 'NOT_VISIBLE',
       processes: [3], // Paint
     },
     {
-      title: 'Standard work instructions for assembly station 3',
-      designation: 'DOC-ASM-002',
-      date: '2025-10-15',
-      owner: 'Pedro Almeida',
-      author: 'Miguel Costa',
-      type_id: 1, // Documentation
-      project: 'PRJ-BETA',
-      plant: 'Marinha Grande',
+      title: 'Grille assembly fixture alignment best practice',
+      designation: 'GP-ASM-001',
+      date: '2026-02-03',
+      owner: 'Mehmet Yilmaz',
+      author: 'Mehmet Yilmaz',
+      type_id: 4, // Good Practice
+      project: 'Proj-2026/004',
+      plant: 'Durden Turkey',
       status: 'VISIBLE',
       processes: [4], // Assembly
     },
     {
-      title: 'Chrome bath chemical concentration monitoring',
-      designation: 'GP-CHR-001',
-      date: '2025-11-01',
-      owner: 'Miguel Costa',
-      author: 'Ana Rodrigues',
-      type_id: 4, // Good Practice
-      project: 'PRJ-ALPHA',
-      plant: 'Leiria',
+      title: 'Incoming resin moisture control guideline',
+      designation: 'GL-INJ-002',
+      date: '2026-02-10',
+      owner: 'Ana Rodrigues',
+      author: 'Carlos Silva',
+      type_id: 3, // Guideline
+      project: 'Proj-2026/001',
+      plant: 'Doureca Portugal',
+      status: 'VISIBLE',
+      processes: [1, 5], // Injection + Quality
+    },
+    {
+      title: 'Hexavalent chrome bath contamination incident',
+      designation: 'LL-CHR-002',
+      date: '2026-02-14',
+      owner: 'Andrei Popescu',
+      author: 'Elena Stanescu',
+      type_id: 5, // Lessons Learned
+      project: 'Proj-2026/005',
+      plant: 'Dourdin Romania',
       status: 'PENDING',
       processes: [2], // Chrome
     },
     {
-      title: 'Cross-process contamination prevention guide',
-      designation: 'GUI-QTY-001',
-      date: '2025-11-20',
-      owner: 'Sofia Fernandes',
-      author: 'Carlos Silva',
-      type_id: 3, // Guideline
-      project: 'PRJ-ALPHA',
-      plant: 'Leiria',
+      title: 'Basecoat-clearcoat adhesion test recommendation',
+      designation: 'REC-PNT-001',
+      date: '2026-02-20',
+      owner: 'Pierre Dumont',
+      author: 'Marie Laurent',
+      type_id: 2, // Recommendation
+      project: 'Proj-2026/003',
+      plant: 'Dourdin France',
       status: 'VISIBLE',
-      processes: [1, 3, 5], // Injection + Paint + Quality
+      processes: [3, 5], // Paint + Quality
     },
     {
-      title: 'Recommended packing standards for chrome parts',
-      designation: 'REC-ASM-001',
-      date: '2025-12-03',
-      owner: 'Pedro Almeida',
-      author: 'Pedro Almeida',
-      type_id: 2, // Recommendation
-      project: 'PRJ-BETA',
-      plant: 'Marinha Grande',
+      title: 'Clip insertion force tolerance study',
+      designation: 'DOC-ASM-001',
+      date: '2026-02-28',
+      owner: 'Mehmet Yilmaz',
+      author: 'Ayse Demir',
+      type_id: 1, // Documentation
+      project: 'Proj-2026/004',
+      plant: 'Durden Turkey',
       status: 'VISIBLE',
       processes: [4, 5], // Assembly + Quality
     },
     {
-      title: 'Mold maintenance schedule documentation',
-      designation: 'DOC-INJ-001',
-      date: '2025-12-10',
+      title: 'Weld line visibility reduction on gloss parts',
+      designation: 'GP-INJ-001',
+      date: '2026-03-05',
       owner: 'Carlos Silva',
       author: 'Ana Rodrigues',
-      type_id: 1, // Documentation
-      project: 'PRJ-ALPHA',
-      plant: 'Leiria',
+      type_id: 4, // Good Practice
+      project: 'Proj-2026/006',
+      plant: 'Doureca Portugal',
       status: 'VISIBLE',
-      processes: [1], // Injection
+      processes: [1, 3], // Injection + Paint
+    },
+    {
+      title: 'Chrome plating thickness uniformity guideline',
+      designation: 'GL-CHR-001',
+      date: '2026-03-12',
+      owner: 'Elena Stanescu',
+      author: 'Andrei Popescu',
+      type_id: 3, // Guideline
+      project: 'Proj-2026/002',
+      plant: 'Dourdin Romania',
+      status: 'VISIBLE',
+      processes: [2], // Chrome
+    },
+    {
+      title: 'Robotic paint arm collision near-miss report',
+      designation: 'LL-PNT-001',
+      date: '2026-03-18',
+      owner: 'Marie Laurent',
+      author: 'Pierre Dumont',
+      type_id: 5, // Lessons Learned
+      project: 'Proj-2026/007',
+      plant: 'Dourdin France',
+      status: 'NOT_VISIBLE',
+      processes: [3], // Paint
+    },
+    {
+      title: 'Final assembly torque wrench calibration standard',
+      designation: 'DOC-ASM-002',
+      date: '2026-03-22',
+      owner: 'Ayse Demir',
+      author: 'Mehmet Yilmaz',
+      type_id: 1, // Documentation
+      project: 'Proj-2026/004',
+      plant: 'Durden Turkey',
+      status: 'VISIBLE',
+      processes: [4], // Assembly
+    },
+    {
+      title: 'Cross-plant quality audit findings Q1 2026',
+      designation: 'REC-QTY-001',
+      date: '2026-03-28',
+      owner: 'Ana Rodrigues',
+      author: 'Elena Stanescu',
+      type_id: 2, // Recommendation
+      project: 'Proj-2026/001',
+      plant: 'Doureca Portugal',
+      status: 'PENDING',
+      processes: [1, 2, 3, 4, 5], // All processes
+    },
+    {
+      title: 'UV-stabiliser dosing error on exterior trim',
+      designation: 'LL-INJ-003',
+      date: '2026-04-02',
+      owner: 'Carlos Silva',
+      author: 'Carlos Silva',
+      type_id: 5, // Lessons Learned
+      project: 'Proj-2026/006',
+      plant: 'Doureca Portugal',
+      status: 'VISIBLE',
+      processes: [1, 5], // Injection + Quality
+    },
+    {
+      title: 'Chrome jig maintenance schedule recommendation',
+      designation: 'REC-CHR-001',
+      date: '2026-04-08',
+      owner: 'Andrei Popescu',
+      author: 'Andrei Popescu',
+      type_id: 2, // Recommendation
+      project: 'Proj-2026/005',
+      plant: 'Dourdin Romania',
+      status: 'VISIBLE',
+      processes: [2], // Chrome
     },
   ];
 
@@ -213,14 +249,16 @@ function seedIfEmpty() {
       insertProjectLink.run(item.project, itemId);
     }
 
-    // Add dummy file attachments to item 1 and item 2
-    insertFile.run(1, 'DOCUMENT', 'injection_guidelines_v2.pdf', 'uploads/injection_guidelines_v2.pdf');
-    insertFile.run(1, 'IMAGE', 'mold_diagram.png', 'uploads/mold_diagram.png');
-    insertFile.run(2, 'DOCUMENT', 'chrome_defect_analysis.pdf', 'uploads/chrome_defect_analysis.pdf');
+    // Add dummy file attachments
+    insertFile.run(1, 'DOCUMENT', 'cooling_channel_report.pdf', 'uploads/cooling_channel_report.pdf');
+    insertFile.run(1, 'IMAGE', 'mold_thermal_scan.png', 'uploads/mold_thermal_scan.png');
+    insertFile.run(2, 'DOCUMENT', 'chrome_adhesion_analysis.pdf', 'uploads/chrome_adhesion_analysis.pdf');
+    insertFile.run(8, 'DOCUMENT', 'clip_force_study.xlsx', 'uploads/clip_force_study.xlsx');
+    insertFile.run(13, 'IMAGE', 'audit_findings_chart.png', 'uploads/audit_findings_chart.png');
   });
 
   seedAll();
-  console.log('[SEED] Inserted 12 knowledge items, 5 types, 5 processes');
+  console.log('[SEED] Inserted 15 knowledge items, 5 types, 5 processes');
 }
 
 module.exports = { seedIfEmpty };

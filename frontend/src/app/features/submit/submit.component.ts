@@ -86,12 +86,20 @@ import { MasterType, MasterProcess } from '../../core/models/knowledge.model';
 
           <mat-form-field appearance="outline">
             <mat-label>Project</mat-label>
-            <input matInput formControlName="project" placeholder="e.g. PRJ-ALPHA">
+            <mat-select formControlName="project">
+              @for (proj of projects; track proj) {
+                <mat-option [value]="proj">{{ proj }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Plant</mat-label>
-            <input matInput formControlName="plant" placeholder="e.g. Leiria">
+            <mat-select formControlName="plant">
+              @for (pl of plants; track pl) {
+                <mat-option [value]="pl">{{ pl }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
@@ -187,6 +195,12 @@ export class SubmitComponent implements OnInit {
   imageFiles: File[] = [];
   submitting = false;
 
+  plants = ['Doureca Portugal', 'Dourdin Romania', 'Dourdin France', 'Durden Turkey'];
+  projects = [
+    'Proj-2026/001', 'Proj-2026/002', 'Proj-2026/003', 'Proj-2026/004', 'Proj-2026/005',
+    'Proj-2026/006', 'Proj-2026/007', 'Proj-2026/008', 'Proj-2026/009', 'Proj-2026/010',
+  ];
+
   constructor(
     private fb: FormBuilder,
     private knowledgeApi: KnowledgeApiService,
@@ -253,7 +267,7 @@ export class SubmitComponent implements OnInit {
     this.knowledgeApi.create(formData).subscribe({
       next: (created) => {
         this.snackBar.open('Knowledge item submitted successfully!', 'Close', { duration: 3000 });
-        this.router.navigate(['/knowledge', created.id]);
+        this.router.navigate(['/knowledge']);
       },
       error: () => {
         this.snackBar.open('Failed to submit item', 'Close', { duration: 3000 });

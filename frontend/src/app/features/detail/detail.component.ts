@@ -1,77 +1,183 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
-import { KnowledgeItemDetail } from '../../core/models/knowledge.model';
+import { MasterDataService } from '../../core/services/master-data.service';
+import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/models/knowledge.model';
 
 @Component({
-  selector: 'app-detail',
+  selector: 'app-detail-dialog',
   standalone: true,
   imports: [
-    CommonModule,
+    CommonModule, FormsModule, MatDialogModule,
     MatCardModule, MatChipsModule, MatIconModule,
     MatButtonModule, MatDividerModule, MatListModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule,
+    MatSnackBarModule,
   ],
   template: `
-    <button mat-stroked-button (click)="goBack()" class="back-btn">
-      <mat-icon>arrow_back</mat-icon> Back to Listing
-    </button>
-
     @if (item) {
-      <mat-card class="detail-card">
-        <mat-card-header>
-          <mat-card-title>{{ item.title }}</mat-card-title>
-          <mat-card-subtitle>{{ item.designation }}</mat-card-subtitle>
-        </mat-card-header>
+      <h2 mat-dialog-title>{{ item.title }}</h2>
 
-        <mat-card-content>
-          <div class="detail-grid">
-            <div class="field">
-              <span class="label">Status</span>
+      <mat-dialog-content>
+        <div class="detail-grid">
+          <!-- Title -->
+          <div class="field full-span">
+            <span class="label">Title</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <input matInput [(ngModel)]="item.title">
+              </mat-form-field>
+            } @else {
+              <span>{{ item.title }}</span>
+            }
+          </div>
+
+          <!-- Designation -->
+          <div class="field">
+            <span class="label">Designation</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <input matInput [(ngModel)]="item.designation">
+              </mat-form-field>
+            } @else {
+              <span>{{ item.designation || '—' }}</span>
+            }
+          </div>
+
+          <!-- Status -->
+          <div class="field">
+            <span class="label">Status</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <mat-select [(ngModel)]="item.visibility_status">
+                  <mat-option value="PENDING">PENDING</mat-option>
+                  <mat-option value="VISIBLE">VISIBLE</mat-option>
+                  <mat-option value="NOT_VISIBLE">NOT_VISIBLE</mat-option>
+                </mat-select>
+              </mat-form-field>
+            } @else {
               <span class="status-badge" [ngClass]="'status-' + item.visibility_status">
                 {{ item.visibility_status }}
               </span>
-            </div>
-            <div class="field">
-              <span class="label">Type</span>
-              <span>{{ item.type_label }}</span>
-            </div>
-            <div class="field">
-              <span class="label">Date</span>
-              <span>{{ item.date }}</span>
-            </div>
-            <div class="field">
-              <span class="label">Owner</span>
-              <span>{{ item.owner }}</span>
-            </div>
-            <div class="field">
-              <span class="label">Author</span>
-              <span>{{ item.author }}</span>
-            </div>
-            <div class="field">
-              <span class="label">Project</span>
-              <span>{{ item.project || '—' }}</span>
-            </div>
-            <div class="field">
-              <span class="label">Plant</span>
-              <span>{{ item.plant || '—' }}</span>
-            </div>
-            <div class="field">
-              <span class="label">Created</span>
-              <span>{{ item.created_at }}</span>
-            </div>
+            }
           </div>
 
-          <mat-divider class="divider"></mat-divider>
+          <!-- Type -->
+          <div class="field">
+            <span class="label">Type</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <mat-select [(ngModel)]="item.type_id">
+                  @for (t of types; track t.id) {
+                    <mat-option [value]="t.id">{{ t.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            } @else {
+              <span>{{ item.type_label }}</span>
+            }
+          </div>
 
-          <h3>Processes</h3>
+          <!-- Date -->
+          <div class="field">
+            <span class="label">Date</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <input matInput type="date" [(ngModel)]="item.date">
+              </mat-form-field>
+            } @else {
+              <span>{{ item.date }}</span>
+            }
+          </div>
+
+          <!-- Owner -->
+          <div class="field">
+            <span class="label">Owner</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <input matInput [(ngModel)]="item.owner">
+              </mat-form-field>
+            } @else {
+              <span>{{ item.owner }}</span>
+            }
+          </div>
+
+          <!-- Author -->
+          <div class="field">
+            <span class="label">Author</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <input matInput [(ngModel)]="item.author">
+              </mat-form-field>
+            } @else {
+              <span>{{ item.author }}</span>
+            }
+          </div>
+
+          <!-- Project -->
+          <div class="field">
+            <span class="label">Project</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <mat-select [(ngModel)]="item.project">
+                  @for (proj of projects; track proj) {
+                    <mat-option [value]="proj">{{ proj }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            } @else {
+              <span>{{ item.project || '—' }}</span>
+            }
+          </div>
+
+          <!-- Plant -->
+          <div class="field">
+            <span class="label">Plant</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <mat-select [(ngModel)]="item.plant">
+                  @for (pl of plants; track pl) {
+                    <mat-option [value]="pl">{{ pl }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            } @else {
+              <span>{{ item.plant || '—' }}</span>
+            }
+          </div>
+
+          <!-- Created -->
+          <div class="field">
+            <span class="label">Created</span>
+            <span>{{ item.created_at }}</span>
+          </div>
+        </div>
+
+        <mat-divider class="divider"></mat-divider>
+
+        <h3>Processes</h3>
+        @if (editing) {
+          <mat-form-field appearance="outline" class="edit-field">
+            <mat-select [(ngModel)]="selectedProcessIds" multiple>
+              @for (p of allProcesses; track p.id) {
+                <mat-option [value]="p.id">{{ p.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        } @else {
           <mat-chip-set>
             @for (p of item.processes; track p.id) {
               <mat-chip>{{ p.label }}</mat-chip>
@@ -80,42 +186,52 @@ import { KnowledgeItemDetail } from '../../core/models/knowledge.model';
               <span class="muted">No processes linked</span>
             }
           </mat-chip-set>
+        }
 
-          <mat-divider class="divider"></mat-divider>
+        <mat-divider class="divider"></mat-divider>
 
-          <h3>Attached Files</h3>
-          @if (item.files.length > 0) {
-            <mat-list>
-              @for (f of item.files; track f.id) {
-                <mat-list-item>
-                  <mat-icon matListItemIcon>
-                    {{ f.file_kind === 'IMAGE' ? 'image' : 'description' }}
-                  </mat-icon>
-                  <a matListItemTitle [href]="'/' + f.storage_path" target="_blank">
-                    {{ f.filename_original }}
-                  </a>
-                  <span matListItemLine>{{ f.file_kind }} &middot; {{ f.uploaded_at }}</span>
-                </mat-list-item>
-              }
-            </mat-list>
-          } @else {
-            <p class="muted">No files attached</p>
-          }
-        </mat-card-content>
-      </mat-card>
+        <h3>Attached Files</h3>
+        @if (item.files.length > 0) {
+          <mat-list>
+            @for (f of item.files; track f.id) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>
+                  {{ f.file_kind === 'IMAGE' ? 'image' : 'description' }}
+                </mat-icon>
+                <a matListItemTitle [href]="'/' + f.storage_path" target="_blank">
+                  {{ f.filename_original }}
+                </a>
+                <span matListItemLine>{{ f.file_kind }} &middot; {{ f.uploaded_at }}</span>
+              </mat-list-item>
+            }
+          </mat-list>
+        } @else {
+          <p class="muted">No files attached</p>
+        }
+      </mat-dialog-content>
+
+      <mat-dialog-actions align="end">
+        @if (editing) {
+          <button mat-raised-button (click)="cancelEdit()">CANCEL</button>
+          <button mat-raised-button color="primary" (click)="saveEdit()">SAVE</button>
+        } @else {
+          <button mat-raised-button color="primary" (click)="toggleEdit()">EDIT</button>
+          <button mat-raised-button color="primary" (click)="close()">EXIT</button>
+        }
+      </mat-dialog-actions>
     } @else {
-      <p>Loading...</p>
+      <mat-dialog-content>
+        <p>Loading...</p>
+      </mat-dialog-content>
     }
   `,
   styles: [`
-    .back-btn { margin-bottom: 16px; }
-    .detail-card { max-width: 800px; }
     .detail-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
-      margin-top: 16px;
     }
+    .full-span { grid-column: 1 / -1; }
     .field {
       display: flex;
       flex-direction: column;
@@ -126,6 +242,9 @@ import { KnowledgeItemDetail } from '../../core/models/knowledge.model';
       color: #666;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+    .edit-field {
+      width: 100%;
     }
     .divider { margin: 20px 0; }
     .muted { color: #999; font-style: italic; }
@@ -140,23 +259,62 @@ import { KnowledgeItemDetail } from '../../core/models/knowledge.model';
     .status-PENDING { background: #fff8e1; color: #f57f17; }
     .status-VISIBLE { background: #e8f5e9; color: #2e7d32; }
     .status-NOT_VISIBLE { background: #eeeeee; color: #616161; }
+    mat-dialog-actions {
+      padding: 12px 24px !important;
+      gap: 8px;
+    }
   `],
 })
-export class DetailComponent implements OnInit {
+export class DetailDialogComponent implements OnInit {
   item: KnowledgeItemDetail | null = null;
+  editing = false;
+  types: MasterType[] = [];
+  allProcesses: MasterProcess[] = [];
+  selectedProcessIds: number[] = [];
+
+  plants = ['Doureca Portugal', 'Dourdin Romania', 'Dourdin France', 'Durden Turkey'];
+  projects = [
+    'Proj-2026/001', 'Proj-2026/002', 'Proj-2026/003', 'Proj-2026/004', 'Proj-2026/005',
+    'Proj-2026/006', 'Proj-2026/007', 'Proj-2026/008', 'Proj-2026/009', 'Proj-2026/010',
+  ];
+
+  private itemSnapshot: string = '';
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
+    @Inject(MAT_DIALOG_DATA) public data: { itemId: number },
+    private dialogRef: MatDialogRef<DetailDialogComponent>,
     private knowledgeApi: KnowledgeApiService,
+    private masterData: MasterDataService,
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.knowledgeApi.getById(id).subscribe(item => this.item = item);
+    this.masterData.getTypes().subscribe(t => this.types = t);
+    this.masterData.getProcesses().subscribe(p => this.allProcesses = p);
+    this.knowledgeApi.getById(this.data.itemId).subscribe(item => {
+      this.item = item;
+      this.selectedProcessIds = item.processes.map(p => p.id);
+    });
   }
 
-  goBack() {
-    this.router.navigate(['/knowledge']);
+  toggleEdit() {
+    this.itemSnapshot = JSON.stringify(this.item);
+    this.editing = true;
+  }
+
+  cancelEdit() {
+    this.item = JSON.parse(this.itemSnapshot);
+    this.selectedProcessIds = this.item!.processes.map(p => p.id);
+    this.editing = false;
+  }
+
+  saveEdit() {
+    this.snackBar.open('Changes saved (mock — no backend update)', 'Close', { duration: 3000 });
+    this.editing = false;
+    this.dialogRef.close('updated');
+  }
+
+  close() {
+    this.dialogRef.close();
   }
 }

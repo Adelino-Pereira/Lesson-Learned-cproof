@@ -13,11 +13,6 @@ export const routes: Routes = [
       import('./features/submit/submit.component').then(m => m.SubmitComponent),
   },
   {
-    path: 'knowledge/:id',
-    loadComponent: () =>
-      import('./features/detail/detail.component').then(m => m.DetailComponent),
-  },
-  {
     path: 'documents-used',
     loadComponent: () =>
       import('./features/documents-used/documents-used.component').then(m => m.DocumentsUsedComponent),

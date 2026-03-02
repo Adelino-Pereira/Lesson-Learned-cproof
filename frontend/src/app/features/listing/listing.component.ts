@@ -13,10 +13,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
 import { KnowledgeItem, KnowledgeFilters, MasterType, MasterProcess } from '../../core/models/knowledge.model';
+import { DetailDialogComponent } from '../detail/detail.component';
 
 @Component({
   selector: 'app-listing',
@@ -26,16 +28,9 @@ import { KnowledgeItem, KnowledgeFilters, MasterType, MasterProcess } from '../.
     MatTableModule, MatPaginatorModule, MatSortModule,
     MatButtonModule, MatIconModule, MatSelectModule,
     MatFormFieldModule, MatInputModule, MatExpansionModule,
-    MatChipsModule, MatBadgeModule,
+    MatChipsModule, MatBadgeModule, MatDialogModule,
   ],
   template: `
-    <div class="listing-header">
-      <h2>Knowledge Items</h2>
-      <button mat-raised-button color="primary" (click)="goToSubmit()">
-        <mat-icon>add</mat-icon> Submit New Item
-      </button>
-    </div>
-
     <mat-accordion>
       <mat-expansion-panel>
         <mat-expansion-panel-header>
@@ -158,12 +153,6 @@ import { KnowledgeItem, KnowledgeFilters, MasterType, MasterProcess } from '../.
     </div>
   `,
   styles: [`
-    .listing-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
     .filters-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -218,6 +207,7 @@ export class ListingComponent implements OnInit {
     private knowledgeApi: KnowledgeApiService,
     private masterData: MasterDataService,
     private router: Router,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
@@ -251,6 +241,15 @@ export class ListingComponent implements OnInit {
   }
 
   goToDetail(id: number) {
-    this.router.navigate(['/knowledge', id]);
+    const ref = this.dialog.open(DetailDialogComponent, {
+      width: '750px',
+      maxHeight: '90vh',
+      data: { itemId: id },
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result === 'updated') {
+        this.loadData();
+      }
+    });
   }
 }
