@@ -124,13 +124,18 @@ export class DocumentsUsedComponent implements OnInit {
   projects: string[] = [];
   selectedProject: string | null = null;
   items: KnowledgeItemWithUsage[] = [];
-  displayedColumns = ['is_used', 'id', 'title', 'type_label', 'designation', 'owner', 'date', 'process_labels'];
+  displayedColumns: string[] = [];
+  canEdit = false;
 
   constructor(
     private knowledgeApi: KnowledgeApiService,
     private snackBar: MatSnackBar,
     public permissions: PermissionService,
-  ) {}
+  ) {
+    this.canEdit = this.permissions.hasPermission('documents-used:edit');
+    const base = ['id', 'title', 'type_label', 'designation', 'owner', 'date', 'process_labels'];
+    this.displayedColumns = this.canEdit ? ['is_used', ...base] : base;
+  }
 
   ngOnInit() {
     this.knowledgeApi.getProjects().subscribe(p => this.projects = p);

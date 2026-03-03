@@ -32,6 +32,9 @@ pnpm-debug.log*
 /backend/uploads/*
 !/backend/uploads/.gitkeep
 
+# Internal docs (spec PDFs)
+/docs
+
 # OS / Editor
 .DS_Store
 Thumbs.db

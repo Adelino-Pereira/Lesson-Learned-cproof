@@ -4,7 +4,7 @@ class KnowledgeController {
 
   static list(req, res) {
     const db = getDb();
-    const { type, process, project, owner, author, plant, date_from, date_to } = req.query;
+    const { type, process, project, owner, author, plant, date_from, date_to, visibility_status } = req.query;
 
     let sql = `
       SELECT ki.*,
@@ -52,6 +52,10 @@ class KnowledgeController {
     if (process) {
       sql += ' AND ki.id IN (SELECT knowledge_item_id FROM knowledge_item_process WHERE process_id = ?)';
       params.push(process);
+    }
+    if (visibility_status) {
+      sql += ' AND ki.visibility_status = ?';
+      params.push(visibility_status);
     }
 
     sql += ' GROUP BY ki.id ORDER BY ki.date DESC';

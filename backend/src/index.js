@@ -22,6 +22,13 @@ app.use('/api', apiRoutes);
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// Serve Angular frontend (production build)
+const publicPath = path.join(__dirname, '..', 'public');
+app.use(express.static(publicPath));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
+
 // Initialize database and start server
 initSchema();
 seedIfEmpty();

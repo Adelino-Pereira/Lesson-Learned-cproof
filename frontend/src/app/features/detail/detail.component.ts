@@ -376,6 +376,7 @@ export class DetailDialogComponent implements OnInit {
   ];
 
   private itemSnapshot: string = '';
+  private modified = false;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { itemId: number },
@@ -416,6 +417,7 @@ export class DetailDialogComponent implements OnInit {
         const label = status === 'VISIBLE' ? 'validated' : 'rejected';
         this.snackBar.open(`Item ${label} successfully`, 'Close', { duration: 3000 });
         this.validating = false;
+        this.modified = true;
       },
       error: () => {
         this.snackBar.open('Failed to update status', 'Close', { duration: 3000 });
@@ -499,6 +501,6 @@ export class DetailDialogComponent implements OnInit {
   }
 
   close() {
-    this.dialogRef.close();
+    this.dialogRef.close(this.modified ? 'updated' : undefined);
   }
 }

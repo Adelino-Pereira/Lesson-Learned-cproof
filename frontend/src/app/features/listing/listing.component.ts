@@ -233,10 +233,15 @@ export class ListingComponent implements OnInit {
     private snackBar: MatSnackBar,
     public permissions: PermissionService,
   ) {
-    const base = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date', 'visibility_status'];
+    const canValidate = this.permissions.hasPermission('knowledge:validate');
+    const base = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date'];
+    if (canValidate) base.push('visibility_status');
     this.displayedColumns = this.permissions.hasPermission('knowledge:edit')
       ? [...base, 'actions']
       : base;
+    if (!canValidate) {
+      this.filters.visibility_status = 'VISIBLE';
+    }
   }
 
   ngOnInit() {
@@ -262,6 +267,9 @@ export class ListingComponent implements OnInit {
 
   clearFilters() {
     this.filters = {};
+    if (!this.permissions.hasPermission('knowledge:validate')) {
+      this.filters.visibility_status = 'VISIBLE';
+    }
     this.loadData();
   }
 

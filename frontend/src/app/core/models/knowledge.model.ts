@@ -71,4 +71,5 @@ export interface KnowledgeFilters {
   plant?: string;
   date_from?: string;
   date_to?: string;
+  visibility_status?: string;
 }
