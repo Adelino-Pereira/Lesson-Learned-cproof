@@ -34,6 +34,10 @@ export class KnowledgeApiService {
     return this.http.post<KnowledgeItem>(this.baseUrl, formData);
   }
 
+  updateStatus(id: number, visibility_status: 'VISIBLE' | 'NOT_VISIBLE'): Observable<KnowledgeItem> {
+    return this.http.patch<KnowledgeItem>(`${this.baseUrl}/${id}/status`, { visibility_status });
+  }
+
   getStats(): Observable<StatsResponse> {
     return this.http.get<StatsResponse>(`${this.baseUrl}/stats`);
   }

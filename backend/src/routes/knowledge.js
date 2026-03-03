@@ -28,4 +28,6 @@ router.post(
   KnowledgeController.create
 );
 
+router.patch('/:id/status', KnowledgeController.updateStatus);
+
 module.exports = router;

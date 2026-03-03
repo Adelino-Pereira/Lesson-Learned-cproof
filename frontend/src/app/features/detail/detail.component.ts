@@ -74,19 +74,9 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
 
           <div class="field">
             <span class="label">Status</span>
-            @if (editing) {
-              <mat-form-field appearance="outline" class="edit-field">
-                <mat-select [(ngModel)]="item.visibility_status">
-                  <mat-option value="PENDING">PENDING</mat-option>
-                  <mat-option value="VISIBLE">VISIBLE</mat-option>
-                  <mat-option value="NOT_VISIBLE">NOT_VISIBLE</mat-option>
-                </mat-select>
-              </mat-form-field>
-            } @else {
-              <span class="status-badge" [ngClass]="'status-' + item.visibility_status">
-                {{ item.visibility_status }}
-              </span>
-            }
+            <span class="status-badge" [ngClass]="'status-' + item.visibility_status">
+              {{ item.visibility_status }}
+            </span>
           </div>
 
           <div class="field">
@@ -228,6 +218,14 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
           <button mat-raised-button (click)="cancelEdit()">CANCEL</button>
           <button mat-raised-button color="primary" (click)="saveEdit()">SAVE</button>
         } @else {
+          @if (item.visibility_status === 'PENDING') {
+            <button mat-raised-button class="validate-btn" (click)="validate('VISIBLE')" [disabled]="validating">
+              <mat-icon>check_circle</mat-icon> VALIDATE
+            </button>
+            <button mat-raised-button class="reject-btn" (click)="validate('NOT_VISIBLE')" [disabled]="validating">
+              <mat-icon>cancel</mat-icon> REJECT
+            </button>
+          }
           <button mat-raised-button color="primary" (click)="toggleEdit()">EDIT</button>
           <button mat-raised-button class="exit-btn" (click)="close()">EXIT</button>
         }
@@ -282,6 +280,20 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
     .status-PENDING { background: #fff8e1; color: #f57f17; }
     .status-VISIBLE { background: #e8f5e9; color: #2e7d32; }
     .status-NOT_VISIBLE { background: #eeeeee; color: #616161; }
+    .validate-btn {
+      background-color: #2e7d32 !important;
+      color: #fff !important;
+    }
+    .reject-btn {
+      background-color: #c62828 !important;
+      color: #fff !important;
+    }
+    .validate-btn mat-icon, .reject-btn mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+    }
     .exit-btn {
       background-color: #C3C3C3 !important;
       color: #fff;
@@ -295,6 +307,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
 export class DetailDialogComponent implements OnInit {
   item: KnowledgeItemDetail | null = null;
   editing = false;
+  validating = false;
   types: MasterType[] = [];
   allProcesses: MasterProcess[] = [];
   selectedProcessIds: number[] = [];
@@ -333,6 +346,23 @@ export class DetailDialogComponent implements OnInit {
     this.item = JSON.parse(this.itemSnapshot);
     this.selectedProcessIds = this.item!.processes.map(p => p.id);
     this.editing = false;
+  }
+
+  validate(status: 'VISIBLE' | 'NOT_VISIBLE') {
+    if (!this.item) return;
+    this.validating = true;
+    this.knowledgeApi.updateStatus(this.item.id, status).subscribe({
+      next: (updated) => {
+        this.item!.visibility_status = updated.visibility_status;
+        const label = status === 'VISIBLE' ? 'validated' : 'rejected';
+        this.snackBar.open(`Item ${label} successfully`, 'Close', { duration: 3000 });
+        this.validating = false;
+      },
+      error: () => {
+        this.snackBar.open('Failed to update status', 'Close', { duration: 3000 });
+        this.validating = false;
+      },
+    });
   }
 
   saveEdit() {

@@ -154,6 +154,29 @@ class KnowledgeController {
     }
   }
 
+  static updateStatus(req, res) {
+    const db = getDb();
+    const { id } = req.params;
+    const { visibility_status } = req.body;
+
+    const allowed = ['VISIBLE', 'NOT_VISIBLE'];
+    if (!allowed.includes(visibility_status)) {
+      return res.status(400).json({ error: 'visibility_status must be VISIBLE or NOT_VISIBLE' });
+    }
+
+    try {
+      const result = db.prepare('UPDATE knowledge_item SET visibility_status = ? WHERE id = ? AND is_active = 1').run(visibility_status, id);
+      if (result.changes === 0) {
+        return res.status(404).json({ error: 'Item not found' });
+      }
+      const updated = db.prepare('SELECT * FROM knowledge_item WHERE id = ?').get(id);
+      res.json(updated);
+    } catch (err) {
+      console.error('[KnowledgeController.updateStatus]', err.message);
+      res.status(500).json({ error: 'Failed to update status' });
+    }
+  }
+
   static stats(req, res) {
     const db = getDb();
 
