@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   KnowledgeItem,
   KnowledgeItemDetail,
+  KnowledgeItemWithUsage,
   KnowledgeFilters,
   StatsResponse,
 } from '../models/knowledge.model';
@@ -52,6 +53,18 @@ export class KnowledgeApiService {
 
   getDocumentsUsed(project: string): Observable<KnowledgeItem[]> {
     return this.http.get<KnowledgeItem[]>(`/api/projects/${encodeURIComponent(project)}/documents-used`);
+  }
+
+  getItemsWithUsage(project: string): Observable<KnowledgeItemWithUsage[]> {
+    return this.http.get<KnowledgeItemWithUsage[]>(`/api/projects/${encodeURIComponent(project)}/items-with-usage`);
+  }
+
+  linkDocumentToProject(project: string, itemId: number): Observable<any> {
+    return this.http.post(`/api/projects/${encodeURIComponent(project)}/documents-used`, { knowledge_item_id: itemId });
+  }
+
+  unlinkDocumentFromProject(project: string, itemId: number): Observable<any> {
+    return this.http.delete(`/api/projects/${encodeURIComponent(project)}/documents-used/${itemId}`);
   }
 
   getProjects(): Observable<string[]> {

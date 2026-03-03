@@ -6,9 +6,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
 
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
-import { KnowledgeItem } from '../../core/models/knowledge.model';
+import { KnowledgeItemWithUsage } from '../../core/models/knowledge.model';
 
 @Component({
   selector: 'app-documents-used',
@@ -16,7 +19,8 @@ import { KnowledgeItem } from '../../core/models/knowledge.model';
   imports: [
     CommonModule, FormsModule,
     MatTableModule, MatSelectModule, MatFormFieldModule,
-    MatCardModule, MatIconModule,
+    MatCardModule, MatIconModule, MatSlideToggleModule,
+    MatSnackBarModule, MatChipsModule,
   ],
   template: `
     <h2>Documents Used by Project</h2>
@@ -35,6 +39,17 @@ import { KnowledgeItem } from '../../core/models/knowledge.model';
         <mat-card-content>
           @if (items.length > 0) {
             <table mat-table [dataSource]="items" class="full-width">
+              <ng-container matColumnDef="is_used">
+                <th mat-header-cell *matHeaderCellDef>Used</th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-slide-toggle
+                    [checked]="row.is_used === 1"
+                    (change)="toggleUsage(row, $event.checked)"
+                    color="primary">
+                  </mat-slide-toggle>
+                </td>
+              </ng-container>
+
               <ng-container matColumnDef="id">
                 <th mat-header-cell *matHeaderCellDef>ID</th>
                 <td mat-cell *matCellDef="let row">{{ row.id }}</td>
@@ -67,14 +82,21 @@ import { KnowledgeItem } from '../../core/models/knowledge.model';
 
               <ng-container matColumnDef="process_labels">
                 <th mat-header-cell *matHeaderCellDef>Processes</th>
-                <td mat-cell *matCellDef="let row">{{ row.process_labels }}</td>
+                <td mat-cell *matCellDef="let row">
+                  @for (p of (row.process_labels || '').split(','); track p) {
+                    @if (p.trim()) {
+                      <span class="process-chip">{{ p.trim() }}</span>
+                    }
+                  }
+                </td>
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                  [class.used-row]="row.is_used === 1"></tr>
             </table>
           } @else {
-            <p class="muted">No documents linked to this project.</p>
+            <p class="muted">No knowledge items found.</p>
           }
         </mat-card-content>
       </mat-card>
@@ -84,15 +106,28 @@ import { KnowledgeItem } from '../../core/models/knowledge.model';
     .project-select { width: 300px; margin-bottom: 16px; }
     .full-width { width: 100%; }
     .muted { color: #999; font-style: italic; padding: 16px 0; }
+    .used-row { background: #e8f5e9; }
+    .process-chip {
+      display: inline-block;
+      background: #e8eaf6;
+      color: #3f51b5;
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 12px;
+      margin: 1px 2px;
+    }
   `],
 })
 export class DocumentsUsedComponent implements OnInit {
   projects: string[] = [];
   selectedProject: string | null = null;
-  items: KnowledgeItem[] = [];
-  displayedColumns = ['id', 'title', 'type_label', 'designation', 'owner', 'date', 'process_labels'];
+  items: KnowledgeItemWithUsage[] = [];
+  displayedColumns = ['is_used', 'id', 'title', 'type_label', 'designation', 'owner', 'date', 'process_labels'];
 
-  constructor(private knowledgeApi: KnowledgeApiService) {}
+  constructor(
+    private knowledgeApi: KnowledgeApiService,
+    private snackBar: MatSnackBar,
+  ) {}
 
   ngOnInit() {
     this.knowledgeApi.getProjects().subscribe(p => this.projects = p);
@@ -100,7 +135,26 @@ export class DocumentsUsedComponent implements OnInit {
 
   onProjectChange() {
     if (this.selectedProject) {
-      this.knowledgeApi.getDocumentsUsed(this.selectedProject).subscribe(items => this.items = items);
+      this.knowledgeApi.getItemsWithUsage(this.selectedProject).subscribe(items => this.items = items);
     }
+  }
+
+  toggleUsage(row: KnowledgeItemWithUsage, checked: boolean) {
+    if (!this.selectedProject) return;
+
+    const action$ = checked
+      ? this.knowledgeApi.linkDocumentToProject(this.selectedProject, row.id)
+      : this.knowledgeApi.unlinkDocumentFromProject(this.selectedProject, row.id);
+
+    action$.subscribe({
+      next: () => {
+        row.is_used = checked ? 1 : 0;
+        const label = checked ? 'linked to' : 'unlinked from';
+        this.snackBar.open(`Item ${label} ${this.selectedProject}`, 'Close', { duration: 2000 });
+      },
+      error: () => {
+        this.snackBar.open('Failed to update link', 'Close', { duration: 3000 });
+      },
+    });
   }
 }

@@ -31,6 +31,10 @@ export interface KnowledgeItem {
   process_labels?: string;
 }
 
+export interface KnowledgeItemWithUsage extends KnowledgeItem {
+  is_used: number;
+}
+
 export interface KnowledgeItemDetail extends KnowledgeItem {
   processes: MasterProcess[];
   files: KnowledgeItemFile[];
