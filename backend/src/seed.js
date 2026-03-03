@@ -27,11 +27,15 @@ function seedIfEmpty() {
   // --- Master Processes ---
   const insertProcess = db.prepare('INSERT INTO master_process (code, label) VALUES (?, ?)');
   const processes = [
-    ['INJ', 'Injection'],
-    ['CHR', 'Chrome'],
-    ['PNT', 'Paint'],
-    ['ASM', 'Assembly'],
-    ['QTY', 'Quality'],
+    ['INJ', 'Injection'],        // 1
+    ['CHR', 'Chrome'],           // 2
+    ['PNT', 'Paint'],            // 3
+    ['SCR', 'Screen printing'],  // 4
+    ['PAD', 'Pad printing'],     // 5
+    ['HOT', 'Hotstamping'],      // 6
+    ['CST', 'Castforming'],      // 7
+    ['WLD', 'Welding'],          // 8
+    ['FLM', 'Film'],             // 9
   ];
   for (const [code, label] of processes) {
     insertProcess.run(code, label);
@@ -72,7 +76,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/002',
       plant: 'Dourdin Romania',
       status: 'VISIBLE',
-      processes: [2, 5], // Chrome + Quality
+      processes: [2, 6], // Chrome + Hotstamping
     },
     {
       title: 'Paint booth airflow calibration procedure',
@@ -96,7 +100,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
       status: 'VISIBLE',
-      processes: [4], // Assembly
+      processes: [7], // Castforming
     },
     {
       title: 'Incoming resin moisture control guideline',
@@ -108,7 +112,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
       status: 'VISIBLE',
-      processes: [1, 5], // Injection + Quality
+      processes: [1], // Injection
     },
     {
       title: 'Hexavalent chrome bath contamination incident',
@@ -132,7 +136,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/003',
       plant: 'Dourdin France',
       status: 'VISIBLE',
-      processes: [3, 5], // Paint + Quality
+      processes: [3, 4], // Paint + Screen printing
     },
     {
       title: 'Clip insertion force tolerance study',
@@ -144,7 +148,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
       status: 'VISIBLE',
-      processes: [4, 5], // Assembly + Quality
+      processes: [7, 8], // Castforming + Welding
     },
     {
       title: 'Weld line visibility reduction on gloss parts',
@@ -192,7 +196,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
       status: 'VISIBLE',
-      processes: [4], // Assembly
+      processes: [8], // Welding
     },
     {
       title: 'Cross-plant quality audit findings Q1 2026',
@@ -204,7 +208,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
       status: 'PENDING',
-      processes: [1, 2, 3, 4, 5], // All processes
+      processes: [1, 2, 3, 6, 7, 8, 9], // Broad audit across processes
     },
     {
       title: 'UV-stabiliser dosing error on exterior trim',
@@ -216,7 +220,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/006',
       plant: 'Doureca Portugal',
       status: 'VISIBLE',
-      processes: [1, 5], // Injection + Quality
+      processes: [1, 9], // Injection + Film
     },
     {
       title: 'Chrome jig maintenance schedule recommendation',
@@ -258,7 +262,7 @@ function seedIfEmpty() {
   });
 
   seedAll();
-  console.log('[SEED] Inserted 15 knowledge items, 5 types, 5 processes');
+  console.log('[SEED] Inserted 15 knowledge items, 5 types, 9 processes');
 }
 
 module.exports = { seedIfEmpty };
