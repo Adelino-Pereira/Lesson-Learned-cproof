@@ -44,8 +44,8 @@ function seedIfEmpty() {
 
   // --- Knowledge Items ---
   const insertItem = db.prepare(`
-    INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, visibility_status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, document_link, visibility_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const insertItemProcess = db.prepare('INSERT INTO knowledge_item_process (knowledge_item_id, process_id) VALUES (?, ?)');
   const insertFile = db.prepare(`
@@ -64,6 +64,7 @@ function seedIfEmpty() {
       type_id: 6, // Lessons-learned
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
+      document_link: 'https://docs.dourdin.com/ll/inj-001-cooling-redesign',
       status: 'VISIBLE',
       processes: [1], // Injection
     },
@@ -76,6 +77,7 @@ function seedIfEmpty() {
       type_id: 6, // Lessons-learned
       project: 'Proj-2026/002',
       plant: 'Dourdin Romania',
+      document_link: 'https://docs.dourdin.com/ll/chr-001-adhesion-loss',
       status: 'VISIBLE',
       processes: [2, 6], // Chrome + Hotstamping
     },
@@ -88,6 +90,7 @@ function seedIfEmpty() {
       type_id: 1, // Documentation
       project: 'Proj-2026/003',
       plant: 'Dourdin France',
+      document_link: 'https://docs.dourdin.com/doc/pnt-001-airflow-calibration',
       status: 'VISIBLE',
       processes: [3], // Paint
     },
@@ -100,6 +103,7 @@ function seedIfEmpty() {
       type_id: 4, // Good-practice
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
+      document_link: null,
       status: 'VISIBLE',
       processes: [7], // Castforming
     },
@@ -112,6 +116,7 @@ function seedIfEmpty() {
       type_id: 3, // Guide-line
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
+      document_link: 'https://docs.dourdin.com/gl/inj-002-resin-moisture',
       status: 'VISIBLE',
       processes: [1], // Injection
     },
@@ -124,6 +129,7 @@ function seedIfEmpty() {
       type_id: 6, // Lessons-learned
       project: 'Proj-2026/005',
       plant: 'Dourdin Romania',
+      document_link: null,
       status: 'PENDING',
       processes: [2], // Chrome
     },
@@ -136,6 +142,7 @@ function seedIfEmpty() {
       type_id: 2, // Recommendation
       project: 'Proj-2026/003',
       plant: 'Dourdin France',
+      document_link: null,
       status: 'VISIBLE',
       processes: [3, 4], // Paint + Screen printing
     },
@@ -148,6 +155,7 @@ function seedIfEmpty() {
       type_id: 1, // Documentation
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
+      document_link: 'https://docs.dourdin.com/doc/asm-001-clip-force',
       status: 'VISIBLE',
       processes: [7, 8], // Castforming + Welding
     },
@@ -160,6 +168,7 @@ function seedIfEmpty() {
       type_id: 4, // Good-practice
       project: 'Proj-2026/006',
       plant: 'Doureca Portugal',
+      document_link: null,
       status: 'VISIBLE',
       processes: [1, 3], // Injection + Paint
     },
@@ -172,6 +181,7 @@ function seedIfEmpty() {
       type_id: 3, // Guide-line
       project: 'Proj-2026/002',
       plant: 'Dourdin Romania',
+      document_link: null,
       status: 'VISIBLE',
       processes: [2], // Chrome
     },
@@ -184,6 +194,7 @@ function seedIfEmpty() {
       type_id: 6, // Lessons-learned
       project: 'Proj-2026/007',
       plant: 'Dourdin France',
+      document_link: null,
       status: 'NOT_VISIBLE',
       processes: [3], // Paint
     },
@@ -196,6 +207,7 @@ function seedIfEmpty() {
       type_id: 1, // Documentation
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
+      document_link: null,
       status: 'VISIBLE',
       processes: [8], // Welding
     },
@@ -208,6 +220,7 @@ function seedIfEmpty() {
       type_id: 2, // Recommendation
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
+      document_link: null,
       status: 'PENDING',
       processes: [1, 2, 3, 6, 7, 8, 9], // Broad audit across processes
     },
@@ -220,6 +233,7 @@ function seedIfEmpty() {
       type_id: 6, // Lessons-learned
       project: 'Proj-2026/006',
       plant: 'Doureca Portugal',
+      document_link: null,
       status: 'VISIBLE',
       processes: [1, 9], // Injection + Film
     },
@@ -232,6 +246,7 @@ function seedIfEmpty() {
       type_id: 2, // Recommendation
       project: 'Proj-2026/005',
       plant: 'Dourdin Romania',
+      document_link: null,
       status: 'VISIBLE',
       processes: [2], // Chrome
     },
@@ -242,7 +257,7 @@ function seedIfEmpty() {
       const result = insertItem.run(
         item.title, item.designation, item.date,
         item.owner, item.author, item.type_id,
-        item.project, item.plant, item.status
+        item.project, item.plant, item.document_link, item.status
       );
       const itemId = result.lastInsertRowid;
 

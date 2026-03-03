@@ -103,7 +103,7 @@ class KnowledgeController {
 
   static create(req, res) {
     const db = getDb();
-    const { title, designation, date, owner, author, type_id, project, plant, processes } = req.body;
+    const { title, designation, date, owner, author, type_id, project, plant, document_link, processes } = req.body;
 
     if (!title || !date || !owner || !author || !type_id) {
       return res.status(400).json({ error: 'Missing required fields: title, date, owner, author, type_id' });
@@ -111,11 +111,11 @@ class KnowledgeController {
 
     try {
       const insertItem = db.prepare(`
-        INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, visibility_status, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 1)
+        INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, document_link, visibility_status, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 1)
       `);
 
-      const result = insertItem.run(title, designation || null, date, owner, author, type_id, project || null, plant || null);
+      const result = insertItem.run(title, designation || null, date, owner, author, type_id, project || null, plant || null, document_link || null);
       const itemId = result.lastInsertRowid;
 
       // Link processes (M2M)

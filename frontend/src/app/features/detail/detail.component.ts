@@ -153,7 +153,26 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Row 4: Created + Processes side by side -->
+          <!-- Row 4: Document Link (full width) -->
+          <div class="field full-span">
+            <span class="label">Document Link</span>
+            @if (editing) {
+              <mat-form-field appearance="outline" class="edit-field">
+                <input matInput [(ngModel)]="item.document_link" placeholder="https://docs.example.com/...">
+                <mat-icon matPrefix>link</mat-icon>
+              </mat-form-field>
+            } @else {
+              @if (item.document_link) {
+                <a [href]="item.document_link" target="_blank" class="doc-link">
+                  <mat-icon class="link-icon">open_in_new</mat-icon> {{ item.document_link }}
+                </a>
+              } @else {
+                <span class="muted">No link</span>
+              }
+            }
+          </div>
+
+          <!-- Row 5: Created + Processes side by side -->
           <div class="field">
             <span class="label">Created</span>
             <span>{{ item.created_at }}</span>
@@ -242,6 +261,16 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
       width: 100%;
     }
     .muted { color: #999; font-style: italic; }
+    .doc-link {
+      color: #3f51b5;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      word-break: break-all;
+    }
+    .doc-link:hover { text-decoration: underline; }
+    .link-icon { font-size: 18px; width: 18px; height: 18px; }
     .status-badge {
       display: inline-block;
       border-radius: 12px;

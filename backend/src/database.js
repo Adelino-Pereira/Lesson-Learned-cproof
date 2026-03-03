@@ -42,6 +42,7 @@ function initSchema() {
       type_id           INTEGER NOT NULL,
       project           TEXT,
       plant             TEXT,
+      document_link     TEXT,
       visibility_status TEXT NOT NULL DEFAULT 'PENDING',
       is_active         INTEGER NOT NULL DEFAULT 1,
       created_at        TEXT NOT NULL DEFAULT (datetime('now')),

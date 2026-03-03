@@ -111,6 +111,12 @@ import { MasterType, MasterProcess } from '../../core/models/knowledge.model';
             </mat-select>
           </mat-form-field>
 
+          <mat-form-field appearance="outline" class="full-span">
+            <mat-label>Document Link</mat-label>
+            <input matInput formControlName="document_link" placeholder="https://docs.example.com/...">
+            <mat-icon matPrefix>link</mat-icon>
+          </mat-form-field>
+
           <div class="file-upload-section">
             <label class="file-label">
               <mat-icon>attach_file</mat-icon> Upload Documents
@@ -220,6 +226,7 @@ export class SubmitComponent implements OnInit {
       project: [''],
       plant: [''],
       processes: [[]],
+      document_link: [''],
     });
 
     this.masterData.getTypes().subscribe(t => this.types = t);
@@ -256,6 +263,7 @@ export class SubmitComponent implements OnInit {
     formData.append('project', values.project || '');
     formData.append('plant', values.plant || '');
     formData.append('processes', JSON.stringify(values.processes || []));
+    formData.append('document_link', values.document_link || '');
 
     for (const file of this.documentFiles) {
       formData.append('documents', file);

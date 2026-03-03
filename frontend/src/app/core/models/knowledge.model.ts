@@ -22,6 +22,7 @@ export interface KnowledgeItem {
   type_id: number;
   project: string | null;
   plant: string | null;
+  document_link: string | null;
   visibility_status: 'PENDING' | 'VISIBLE' | 'NOT_VISIBLE';
   is_active: number;
   created_at: string;
