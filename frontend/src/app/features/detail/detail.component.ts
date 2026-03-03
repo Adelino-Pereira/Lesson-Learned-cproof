@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -163,6 +163,16 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
+          <!-- Derived from (if applicable) -->
+          @if (item.derived_from_id) {
+            <div class="field full-span">
+              <span class="label">Derived from</span>
+              <a class="derived-link" (click)="openParent(item.derived_from_id!)">
+                <mat-icon class="link-icon">launch</mat-icon> {{ item.derived_from_title || 'Item #' + item.derived_from_id }}
+              </a>
+            </div>
+          }
+
           <!-- Row 5: Created + Processes side by side -->
           <div class="field">
             <span class="label">Created</span>
@@ -226,6 +236,25 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             <button mat-raised-button class="reject-btn" (click)="validate('NOT_VISIBLE')" [disabled]="validating">
               <mat-icon>cancel</mat-icon> REJECT
             </button>
+          }
+          @if (item.type_id === 6 && !item.derived_from_id && permissions.hasPermission('knowledge:edit')) {
+            @if (officialising) {
+              <mat-form-field appearance="outline" class="officialise-select">
+                <mat-label>Target type</mat-label>
+                <mat-select [(ngModel)]="officialiseTypeId">
+                  <mat-option [value]="4">Good-practice</mat-option>
+                  <mat-option [value]="3">Guide-line</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button mat-raised-button (click)="officialising = false">CANCEL</button>
+              <button mat-raised-button class="validate-btn" (click)="confirmOfficialise()" [disabled]="!officialiseTypeId || creatingDerived">
+                CONFIRM
+              </button>
+            } @else {
+              <button mat-raised-button class="officialise-btn" (click)="officialising = true">
+                <mat-icon>verified</mat-icon> OFFICIALISE
+              </button>
+            }
           }
           @if (permissions.hasPermission('knowledge:edit')) {
             <button mat-raised-button color="primary" (click)="toggleEdit()">EDIT</button>
@@ -301,6 +330,28 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
       background-color: #C3C3C3 !important;
       color: #fff;
     }
+    .derived-link {
+      color: #3f51b5;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .derived-link:hover { text-decoration: underline; }
+    .officialise-btn {
+      background-color: #1565c0 !important;
+      color: #fff !important;
+    }
+    .officialise-btn mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+    }
+    .officialise-select {
+      width: 160px;
+      margin-bottom: -1.25em;
+    }
     mat-dialog-actions {
       padding: 12px 24px !important;
       gap: 8px;
@@ -311,6 +362,9 @@ export class DetailDialogComponent implements OnInit {
   item: KnowledgeItemDetail | null = null;
   editing = false;
   validating = false;
+  officialising = false;
+  officialiseTypeId: number | null = null;
+  creatingDerived = false;
   types: MasterType[] = [];
   allProcesses: MasterProcess[] = [];
   selectedProcessIds: number[] = [];
@@ -326,6 +380,7 @@ export class DetailDialogComponent implements OnInit {
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { itemId: number },
     private dialogRef: MatDialogRef<DetailDialogComponent>,
+    private dialog: MatDialog,
     private knowledgeApi: KnowledgeApiService,
     private masterData: MasterDataService,
     private snackBar: MatSnackBar,
@@ -393,6 +448,52 @@ export class DetailDialogComponent implements OnInit {
       },
       error: () => {
         this.snackBar.open('Failed to save changes', 'Close', { duration: 3000 });
+      },
+    });
+  }
+
+  openParent(parentId: number) {
+    this.dialogRef.close();
+    this.dialog.open(DetailDialogComponent, {
+      width: '90vw',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      data: { itemId: parentId },
+    });
+  }
+
+  confirmOfficialise() {
+    if (!this.item || !this.officialiseTypeId) return;
+    this.creatingDerived = true;
+
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    const body = {
+      title: this.item.title,
+      designation: this.item.designation,
+      date: dateStr,
+      owner: this.item.owner,
+      author: this.item.author,
+      type_id: this.officialiseTypeId,
+      project: this.item.project,
+      plant: this.item.plant,
+      document_link: this.item.document_link,
+      processes: JSON.stringify(this.item.processes.map(p => p.id)),
+      derived_from_id: this.item.id,
+    };
+
+    this.knowledgeApi.createJson(body).subscribe({
+      next: () => {
+        const typeLabel = this.officialiseTypeId === 4 ? 'Good-practice' : 'Guide-line';
+        this.snackBar.open(`${typeLabel} created from this item`, 'Close', { duration: 3000 });
+        this.creatingDerived = false;
+        this.officialising = false;
+        this.dialogRef.close('updated');
+      },
+      error: () => {
+        this.snackBar.open('Failed to create derived item', 'Close', { duration: 3000 });
+        this.creatingDerived = false;
       },
     });
   }

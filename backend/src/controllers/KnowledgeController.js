@@ -10,11 +10,13 @@ class KnowledgeController {
       SELECT ki.*,
              mt.code  AS type_code,
              mt.label AS type_label,
-             GROUP_CONCAT(DISTINCT mp.label) AS process_labels
+             GROUP_CONCAT(DISTINCT mp.label) AS process_labels,
+             parent.title AS derived_from_title
       FROM knowledge_item ki
       LEFT JOIN master_type mt ON mt.id = ki.type_id
       LEFT JOIN knowledge_item_process kip ON kip.knowledge_item_id = ki.id
       LEFT JOIN master_process mp ON mp.id = kip.process_id
+      LEFT JOIN knowledge_item parent ON parent.id = ki.derived_from_id
       WHERE ki.is_active = 1
     `;
     const params = [];
@@ -71,9 +73,11 @@ class KnowledgeController {
       const item = db.prepare(`
         SELECT ki.*,
                mt.code  AS type_code,
-               mt.label AS type_label
+               mt.label AS type_label,
+               parent.title AS derived_from_title
         FROM knowledge_item ki
         LEFT JOIN master_type mt ON mt.id = ki.type_id
+        LEFT JOIN knowledge_item parent ON parent.id = ki.derived_from_id
         WHERE ki.id = ?
       `).get(id);
 
@@ -103,7 +107,7 @@ class KnowledgeController {
 
   static create(req, res) {
     const db = getDb();
-    const { title, designation, date, owner, author, type_id, project, plant, document_link, processes } = req.body;
+    const { title, designation, date, owner, author, type_id, project, plant, document_link, processes, derived_from_id } = req.body;
 
     if (!title || !date || !owner || !author || !type_id) {
       return res.status(400).json({ error: 'Missing required fields: title, date, owner, author, type_id' });
@@ -111,11 +115,11 @@ class KnowledgeController {
 
     try {
       const insertItem = db.prepare(`
-        INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, document_link, visibility_status, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 1)
+        INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, document_link, visibility_status, is_active, derived_from_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 1, ?)
       `);
 
-      const result = insertItem.run(title, designation || null, date, owner, author, type_id, project || null, plant || null, document_link || null);
+      const result = insertItem.run(title, designation || null, date, owner, author, type_id, project || null, plant || null, document_link || null, derived_from_id || null);
       const itemId = result.lastInsertRowid;
 
       // Link processes (M2M)

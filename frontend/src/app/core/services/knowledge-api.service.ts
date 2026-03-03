@@ -35,6 +35,10 @@ export class KnowledgeApiService {
     return this.http.post<KnowledgeItem>(this.baseUrl, formData);
   }
 
+  createJson(body: Record<string, any>): Observable<KnowledgeItem> {
+    return this.http.post<KnowledgeItem>(this.baseUrl, body);
+  }
+
   update(id: number, body: Record<string, any>): Observable<KnowledgeItemDetail> {
     return this.http.put<KnowledgeItemDetail>(`${this.baseUrl}/${id}`, body);
   }

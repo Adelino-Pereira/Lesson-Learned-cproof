@@ -43,10 +43,12 @@ function initSchema() {
       project           TEXT,
       plant             TEXT,
       document_link     TEXT,
+      derived_from_id   INTEGER DEFAULT NULL,
       visibility_status TEXT NOT NULL DEFAULT 'PENDING',
       is_active         INTEGER NOT NULL DEFAULT 1,
       created_at        TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (type_id) REFERENCES master_type(id)
+      FOREIGN KEY (type_id) REFERENCES master_type(id),
+      FOREIGN KEY (derived_from_id) REFERENCES knowledge_item(id)
     );
 
     CREATE TABLE IF NOT EXISTS knowledge_item_process (

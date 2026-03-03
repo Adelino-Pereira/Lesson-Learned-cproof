@@ -29,6 +29,8 @@ export interface KnowledgeItem {
   type_code?: string;
   type_label?: string;
   process_labels?: string;
+  derived_from_id: number | null;
+  derived_from_title?: string;
 }
 
 export interface KnowledgeItemWithUsage extends KnowledgeItem {

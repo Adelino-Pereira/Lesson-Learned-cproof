@@ -44,8 +44,8 @@ function seedIfEmpty() {
 
   // --- Knowledge Items ---
   const insertItem = db.prepare(`
-    INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, document_link, visibility_status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, document_link, visibility_status, derived_from_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const insertItemProcess = db.prepare('INSERT INTO knowledge_item_process (knowledge_item_id, process_id) VALUES (?, ?)');
   const insertFile = db.prepare(`
@@ -250,6 +250,20 @@ function seedIfEmpty() {
       status: 'VISIBLE',
       processes: [2], // Chrome
     },
+    {
+      title: 'Cooling channel design standard for bumper molds',
+      designation: 'GP-INJ-002',
+      date: '2026-04-15',
+      owner: 'Carlos Silva',
+      author: 'Ana Rodrigues',
+      type_id: 4, // Good-practice (derived from LL-INJ-001, item 1)
+      project: 'Proj-2026/001',
+      plant: 'Doureca Portugal',
+      document_link: 'https://docs.dourdin.com/gp/inj-002-cooling-standard',
+      status: 'VISIBLE',
+      processes: [1], // Injection
+      derived_from_id: 1, // Derived from item 1 (LL-INJ-001)
+    },
   ];
 
   const seedAll = db.transaction(() => {
@@ -257,7 +271,8 @@ function seedIfEmpty() {
       const result = insertItem.run(
         item.title, item.designation, item.date,
         item.owner, item.author, item.type_id,
-        item.project, item.plant, item.document_link, item.status
+        item.project, item.plant, item.document_link, item.status,
+        item.derived_from_id || null
       );
       const itemId = result.lastInsertRowid;
 
@@ -278,7 +293,7 @@ function seedIfEmpty() {
   });
 
   seedAll();
-  console.log('[SEED] Inserted 15 knowledge items, 6 types, 9 processes');
+  console.log('[SEED] Inserted 16 knowledge items, 6 types, 9 processes');
 }
 
 module.exports = { seedIfEmpty };
