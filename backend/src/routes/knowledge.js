@@ -28,6 +28,8 @@ router.post(
   KnowledgeController.create
 );
 
+router.put('/:id', KnowledgeController.update);
+router.delete('/:id', KnowledgeController.delete);
 router.patch('/:id/status', KnowledgeController.updateStatus);
 
 module.exports = router;

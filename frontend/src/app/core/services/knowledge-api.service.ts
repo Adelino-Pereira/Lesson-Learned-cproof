@@ -34,6 +34,14 @@ export class KnowledgeApiService {
     return this.http.post<KnowledgeItem>(this.baseUrl, formData);
   }
 
+  update(id: number, body: Record<string, any>): Observable<KnowledgeItemDetail> {
+    return this.http.put<KnowledgeItemDetail>(`${this.baseUrl}/${id}`, body);
+  }
+
+  delete(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${id}`);
+  }
+
   updateStatus(id: number, visibility_status: 'VISIBLE' | 'NOT_VISIBLE'): Observable<KnowledgeItem> {
     return this.http.patch<KnowledgeItem>(`${this.baseUrl}/${id}/status`, { visibility_status });
   }

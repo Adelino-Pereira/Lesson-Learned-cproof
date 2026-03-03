@@ -366,9 +366,31 @@ export class DetailDialogComponent implements OnInit {
   }
 
   saveEdit() {
-    this.snackBar.open('Changes saved (mock — no backend update)', 'Close', { duration: 3000 });
-    this.editing = false;
-    this.dialogRef.close('updated');
+    if (!this.item) return;
+    const body = {
+      title: this.item.title,
+      designation: this.item.designation,
+      date: this.item.date,
+      owner: this.item.owner,
+      author: this.item.author,
+      type_id: this.item.type_id,
+      project: this.item.project,
+      plant: this.item.plant,
+      document_link: this.item.document_link,
+      processes: this.selectedProcessIds,
+    };
+    this.knowledgeApi.update(this.item.id, body).subscribe({
+      next: (updated) => {
+        this.item = updated;
+        this.selectedProcessIds = updated.processes.map(p => p.id);
+        this.snackBar.open('Changes saved successfully', 'Close', { duration: 3000 });
+        this.editing = false;
+        this.dialogRef.close('updated');
+      },
+      error: () => {
+        this.snackBar.open('Failed to save changes', 'Close', { duration: 3000 });
+      },
+    });
   }
 
   close() {

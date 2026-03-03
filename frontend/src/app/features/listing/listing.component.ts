@@ -14,6 +14,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
@@ -29,6 +31,7 @@ import { DetailDialogComponent } from '../detail/detail.component';
     MatButtonModule, MatIconModule, MatSelectModule,
     MatFormFieldModule, MatInputModule, MatExpansionModule,
     MatChipsModule, MatBadgeModule, MatDialogModule,
+    MatSnackBarModule, MatTooltipModule,
   ],
   template: `
     <mat-accordion>
@@ -148,6 +151,18 @@ import { DetailDialogComponent } from '../detail/detail.component';
           </td>
         </ng-container>
 
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button matTooltip="Edit" (click)="goToDetail(row.id); $event.stopPropagation()">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Delete" (click)="deleteItem(row); $event.stopPropagation()">
+              <mat-icon class="delete-icon">delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
             class="clickable-row"
@@ -196,10 +211,11 @@ import { DetailDialogComponent } from '../detail/detail.component';
     .status-PENDING { background: #fff8e1; color: #f57f17; }
     .status-VISIBLE { background: #e8f5e9; color: #2e7d32; }
     .status-NOT_VISIBLE { background: #eeeeee; color: #616161; }
+    .delete-icon { color: #c62828; }
   `],
 })
 export class ListingComponent implements OnInit {
-  displayedColumns = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date', 'visibility_status'];
+  displayedColumns = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date', 'visibility_status', 'actions'];
   dataSource = new MatTableDataSource<KnowledgeItem>([]);
   filters: KnowledgeFilters = {};
   types: MasterType[] = [];
@@ -213,6 +229,7 @@ export class ListingComponent implements OnInit {
     private masterData: MasterDataService,
     private router: Router,
     private dialog: MatDialog,
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit() {
@@ -243,6 +260,19 @@ export class ListingComponent implements OnInit {
 
   goToSubmit() {
     this.router.navigate(['/knowledge/new']);
+  }
+
+  deleteItem(row: KnowledgeItem) {
+    if (!confirm(`Delete "${row.title}"?`)) return;
+    this.knowledgeApi.delete(row.id).subscribe({
+      next: () => {
+        this.snackBar.open('Item deleted', 'Close', { duration: 3000 });
+        this.loadData();
+      },
+      error: () => {
+        this.snackBar.open('Failed to delete item', 'Close', { duration: 3000 });
+      },
+    });
   }
 
   goToDetail(id: number) {
