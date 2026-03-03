@@ -124,6 +124,11 @@ import { DetailDialogComponent } from '../detail/detail.component';
           <td mat-cell *matCellDef="let row">{{ row.owner }}</td>
         </ng-container>
 
+        <ng-container matColumnDef="author">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Author</th>
+          <td mat-cell *matCellDef="let row">{{ row.author }}</td>
+        </ng-container>
+
         <ng-container matColumnDef="project">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Project</th>
           <td mat-cell *matCellDef="let row">{{ row.project }}</td>
@@ -194,7 +199,7 @@ import { DetailDialogComponent } from '../detail/detail.component';
   `],
 })
 export class ListingComponent implements OnInit {
-  displayedColumns = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'date', 'visibility_status'];
+  displayedColumns = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date', 'visibility_status'];
   dataSource = new MatTableDataSource<KnowledgeItem>([]);
   filters: KnowledgeFilters = {};
   types: MasterType[] = [];

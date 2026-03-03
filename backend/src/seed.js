@@ -14,11 +14,12 @@ function seedIfEmpty() {
   // --- Master Types ---
   const insertType = db.prepare('INSERT INTO master_type (code, label) VALUES (?, ?)');
   const types = [
-    ['DOC', 'Documentation'],
-    ['REC', 'Recommendation'],
-    ['GUI', 'Guideline'],
-    ['GPR', 'Good Practice'],
-    ['LLE', 'Lessons Learned'],
+    ['DOC', 'Documentation'],     // 1
+    ['REC', 'Recommendation'],    // 2
+    ['GUI', 'Guide-line'],        // 3
+    ['GPR', 'Good-practice'],     // 4
+    ['DRU', 'Design-rule'],       // 5
+    ['LLE', 'Lessons-learned'],   // 6
   ];
   for (const [code, label] of types) {
     insertType.run(code, label);
@@ -60,7 +61,7 @@ function seedIfEmpty() {
       date: '2026-01-10',
       owner: 'Carlos Silva',
       author: 'Ana Rodrigues',
-      type_id: 5, // Lessons Learned
+      type_id: 6, // Lessons-learned
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
       status: 'VISIBLE',
@@ -72,7 +73,7 @@ function seedIfEmpty() {
       date: '2026-01-18',
       owner: 'Andrei Popescu',
       author: 'Andrei Popescu',
-      type_id: 5, // Lessons Learned
+      type_id: 6, // Lessons-learned
       project: 'Proj-2026/002',
       plant: 'Dourdin Romania',
       status: 'VISIBLE',
@@ -96,7 +97,7 @@ function seedIfEmpty() {
       date: '2026-02-03',
       owner: 'Mehmet Yilmaz',
       author: 'Mehmet Yilmaz',
-      type_id: 4, // Good Practice
+      type_id: 4, // Good-practice
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
       status: 'VISIBLE',
@@ -108,7 +109,7 @@ function seedIfEmpty() {
       date: '2026-02-10',
       owner: 'Ana Rodrigues',
       author: 'Carlos Silva',
-      type_id: 3, // Guideline
+      type_id: 3, // Guide-line
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
       status: 'VISIBLE',
@@ -120,7 +121,7 @@ function seedIfEmpty() {
       date: '2026-02-14',
       owner: 'Andrei Popescu',
       author: 'Elena Stanescu',
-      type_id: 5, // Lessons Learned
+      type_id: 6, // Lessons-learned
       project: 'Proj-2026/005',
       plant: 'Dourdin Romania',
       status: 'PENDING',
@@ -156,7 +157,7 @@ function seedIfEmpty() {
       date: '2026-03-05',
       owner: 'Carlos Silva',
       author: 'Ana Rodrigues',
-      type_id: 4, // Good Practice
+      type_id: 4, // Good-practice
       project: 'Proj-2026/006',
       plant: 'Doureca Portugal',
       status: 'VISIBLE',
@@ -168,7 +169,7 @@ function seedIfEmpty() {
       date: '2026-03-12',
       owner: 'Elena Stanescu',
       author: 'Andrei Popescu',
-      type_id: 3, // Guideline
+      type_id: 3, // Guide-line
       project: 'Proj-2026/002',
       plant: 'Dourdin Romania',
       status: 'VISIBLE',
@@ -180,7 +181,7 @@ function seedIfEmpty() {
       date: '2026-03-18',
       owner: 'Marie Laurent',
       author: 'Pierre Dumont',
-      type_id: 5, // Lessons Learned
+      type_id: 6, // Lessons-learned
       project: 'Proj-2026/007',
       plant: 'Dourdin France',
       status: 'NOT_VISIBLE',
@@ -216,7 +217,7 @@ function seedIfEmpty() {
       date: '2026-04-02',
       owner: 'Carlos Silva',
       author: 'Carlos Silva',
-      type_id: 5, // Lessons Learned
+      type_id: 6, // Lessons-learned
       project: 'Proj-2026/006',
       plant: 'Doureca Portugal',
       status: 'VISIBLE',
@@ -262,7 +263,7 @@ function seedIfEmpty() {
   });
 
   seedAll();
-  console.log('[SEED] Inserted 15 knowledge items, 5 types, 9 processes');
+  console.log('[SEED] Inserted 15 knowledge items, 6 types, 9 processes');
 }
 
 module.exports = { seedIfEmpty };
