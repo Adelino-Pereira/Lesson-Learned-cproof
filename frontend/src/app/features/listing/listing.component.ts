@@ -19,6 +19,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
+import { PermissionService } from '../../core/services/permission.service';
 import { KnowledgeItem, KnowledgeFilters, MasterType, MasterProcess } from '../../core/models/knowledge.model';
 import { DetailDialogComponent } from '../detail/detail.component';
 
@@ -139,7 +140,7 @@ import { DetailDialogComponent } from '../detail/detail.component';
 
         <ng-container matColumnDef="date">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
-          <td mat-cell *matCellDef="let row">{{ row.date }}</td>
+          <td mat-cell *matCellDef="let row">{{ row.date | date:'yyyy/MM/dd' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="visibility_status">
@@ -215,7 +216,7 @@ import { DetailDialogComponent } from '../detail/detail.component';
   `],
 })
 export class ListingComponent implements OnInit {
-  displayedColumns = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date', 'visibility_status', 'actions'];
+  displayedColumns: string[] = [];
   dataSource = new MatTableDataSource<KnowledgeItem>([]);
   filters: KnowledgeFilters = {};
   types: MasterType[] = [];
@@ -230,7 +231,13 @@ export class ListingComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-  ) {}
+    public permissions: PermissionService,
+  ) {
+    const base = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date', 'visibility_status'];
+    this.displayedColumns = this.permissions.hasPermission('knowledge:edit')
+      ? [...base, 'actions']
+      : base;
+  }
 
   ngOnInit() {
     this.masterData.getTypes().subscribe(t => this.types = t);

@@ -10,10 +10,39 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { DateAdapter, MAT_DATE_FORMATS, NativeDateAdapter } from '@angular/material/core';
+
+class YyyyMmDdAdapter extends NativeDateAdapter {
+  override format(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
+  }
+
+  override parse(value: string): Date | null {
+    if (!value) return null;
+    const parts = value.split('/');
+    if (parts.length === 3) {
+      return new Date(+parts[0], +parts[1] - 1, +parts[2]);
+    }
+    return super.parse(value);
+  }
+}
+
+const APP_DATE_FORMATS = {
+  parse: { dateInput: 'input' },
+  display: {
+    dateInput: 'input',
+    monthYearLabel: { year: 'numeric', month: 'short' },
+    dateA11yLabel: { year: 'numeric', month: 'long', day: 'numeric' },
+    monthYearA11yLabel: { year: 'numeric', month: 'long' },
+  },
+};
 
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
+import { AuthService } from '../../core/services/auth.service';
 import { MasterType, MasterProcess } from '../../core/models/knowledge.model';
 
 @Component({
@@ -23,7 +52,11 @@ import { MasterType, MasterProcess } from '../../core/models/knowledge.model';
     CommonModule, ReactiveFormsModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatCardModule,
-    MatSnackBarModule, MatDatepickerModule, MatNativeDateModule,
+    MatSnackBarModule, MatDatepickerModule,
+  ],
+  providers: [
+    { provide: DateAdapter, useClass: YyyyMmDdAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: APP_DATE_FORMATS },
   ],
   template: `
     <div class="submit-header">
@@ -211,6 +244,7 @@ export class SubmitComponent implements OnInit {
     private fb: FormBuilder,
     private knowledgeApi: KnowledgeApiService,
     private masterData: MasterDataService,
+    private authService: AuthService,
     private router: Router,
     private snackBar: MatSnackBar,
   ) {}
@@ -221,7 +255,7 @@ export class SubmitComponent implements OnInit {
       designation: [''],
       date: [null, Validators.required],
       owner: ['', Validators.required],
-      author: ['', Validators.required],
+      author: [this.authService.currentUser?.name || '', Validators.required],
       type_id: [null, Validators.required],
       project: [''],
       plant: [''],

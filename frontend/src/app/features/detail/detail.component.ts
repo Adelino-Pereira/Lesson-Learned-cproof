@@ -15,6 +15,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
+import { PermissionService } from '../../core/services/permission.service';
 import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/models/knowledge.model';
 
 @Component({
@@ -86,7 +87,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
                 <input matInput type="date" [(ngModel)]="item.date">
               </mat-form-field>
             } @else {
-              <span>{{ item.date }}</span>
+              <span>{{ item.date | date:'yyyy/MM/dd' }}</span>
             }
           </div>
 
@@ -165,7 +166,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
           <!-- Row 5: Created + Processes side by side -->
           <div class="field">
             <span class="label">Created</span>
-            <span>{{ item.created_at }}</span>
+            <span>{{ item.created_at | date:'yyyy/MM/dd' }}</span>
           </div>
 
           <div class="field span-2">
@@ -218,7 +219,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
           <button mat-raised-button (click)="cancelEdit()">CANCEL</button>
           <button mat-raised-button color="primary" (click)="saveEdit()">SAVE</button>
         } @else {
-          @if (item.visibility_status === 'PENDING') {
+          @if (item.visibility_status === 'PENDING' && permissions.hasPermission('knowledge:validate')) {
             <button mat-raised-button class="validate-btn" (click)="validate('VISIBLE')" [disabled]="validating">
               <mat-icon>check_circle</mat-icon> VALIDATE
             </button>
@@ -226,7 +227,9 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
               <mat-icon>cancel</mat-icon> REJECT
             </button>
           }
-          <button mat-raised-button color="primary" (click)="toggleEdit()">EDIT</button>
+          @if (permissions.hasPermission('knowledge:edit')) {
+            <button mat-raised-button color="primary" (click)="toggleEdit()">EDIT</button>
+          }
           <button mat-raised-button class="exit-btn" (click)="close()">EXIT</button>
         }
       </mat-dialog-actions>
@@ -326,6 +329,7 @@ export class DetailDialogComponent implements OnInit {
     private knowledgeApi: KnowledgeApiService,
     private masterData: MasterDataService,
     private snackBar: MatSnackBar,
+    public permissions: PermissionService,
   ) {}
 
   ngOnInit() {

@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
+import { PermissionService } from '../../core/services/permission.service';
 import { KnowledgeItemWithUsage } from '../../core/models/knowledge.model';
 
 @Component({
@@ -45,6 +46,7 @@ import { KnowledgeItemWithUsage } from '../../core/models/knowledge.model';
                   <mat-slide-toggle
                     [checked]="row.is_used === 1"
                     (change)="toggleUsage(row, $event.checked)"
+                    [disabled]="!permissions.hasPermission('documents-used:edit')"
                     color="primary">
                   </mat-slide-toggle>
                 </td>
@@ -77,7 +79,7 @@ import { KnowledgeItemWithUsage } from '../../core/models/knowledge.model';
 
               <ng-container matColumnDef="date">
                 <th mat-header-cell *matHeaderCellDef>Date</th>
-                <td mat-cell *matCellDef="let row">{{ row.date }}</td>
+                <td mat-cell *matCellDef="let row">{{ row.date | date:'yyyy/MM/dd' }}</td>
               </ng-container>
 
               <ng-container matColumnDef="process_labels">
@@ -127,6 +129,7 @@ export class DocumentsUsedComponent implements OnInit {
   constructor(
     private knowledgeApi: KnowledgeApiService,
     private snackBar: MatSnackBar,
+    public permissions: PermissionService,
   ) {}
 
   ngOnInit() {
