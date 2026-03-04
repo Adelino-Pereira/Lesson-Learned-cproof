@@ -91,9 +91,9 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             }
           </div>
 
-          <!-- Row 3: Owner, Author, Project, Plant -->
+          <!-- Row 3: Customer, Author, Project, Plant -->
           <div class="field">
-            <span class="label">Owner</span>
+            <span class="label">Customer</span>
             @if (editing) {
               <mat-form-field appearance="outline" class="edit-field">
                 <input matInput [(ngModel)]="item.owner">

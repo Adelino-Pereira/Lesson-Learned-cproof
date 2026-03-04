@@ -73,7 +73,7 @@ import { KnowledgeItemWithUsage } from '../../core/models/knowledge.model';
               </ng-container>
 
               <ng-container matColumnDef="owner">
-                <th mat-header-cell *matHeaderCellDef>Owner</th>
+                <th mat-header-cell *matHeaderCellDef>Customer</th>
                 <td mat-cell *matCellDef="let row">{{ row.owner }}</td>
               </ng-container>
 

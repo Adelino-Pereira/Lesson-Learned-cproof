@@ -90,10 +90,10 @@ import { MasterType, MasterProcess } from '../../core/models/knowledge.model';
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Owner</mat-label>
-            <input matInput formControlName="owner" placeholder="Enter owner name">
+            <mat-label>Customer</mat-label>
+            <input matInput formControlName="owner" placeholder="Enter customer name">
             @if (form.get('owner')?.hasError('required') && form.get('owner')?.touched) {
-              <mat-error>Owner is required</mat-error>
+              <mat-error>Customer is required</mat-error>
             }
           </mat-form-field>
 

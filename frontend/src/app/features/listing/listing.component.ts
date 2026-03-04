@@ -92,7 +92,7 @@ import { DetailDialogComponent } from '../detail/detail.component';
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Owner</mat-label>
+            <mat-label>Customer</mat-label>
             <input matInput [(ngModel)]="filters.owner" (change)="applyFilters()">
           </mat-form-field>
 
@@ -145,7 +145,7 @@ import { DetailDialogComponent } from '../detail/detail.component';
         </ng-container>
 
         <ng-container matColumnDef="owner">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Owner</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Customer</th>
           <td mat-cell *matCellDef="let row">{{ row.owner }}</td>
         </ng-container>
 
