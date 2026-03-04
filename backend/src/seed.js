@@ -65,7 +65,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
       document_link: 'https://docs.dourdin.com/ll/inj-001-cooling-redesign',
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [1], // Injection
     },
     {
@@ -78,7 +78,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/002',
       plant: 'Dourdin Romania',
       document_link: 'https://docs.dourdin.com/ll/chr-001-adhesion-loss',
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [2, 6], // Chrome + Hotstamping
     },
     {
@@ -91,7 +91,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/003',
       plant: 'Dourdin France',
       document_link: 'https://docs.dourdin.com/doc/pnt-001-airflow-calibration',
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [3], // Paint
     },
     {
@@ -104,7 +104,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
       document_link: null,
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [7], // Castforming
     },
     {
@@ -117,7 +117,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
       document_link: 'https://docs.dourdin.com/gl/inj-002-resin-moisture',
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [1], // Injection
     },
     {
@@ -143,7 +143,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/003',
       plant: 'Dourdin France',
       document_link: null,
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [3, 4], // Paint + Screen printing
     },
     {
@@ -156,7 +156,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
       document_link: 'https://docs.dourdin.com/doc/asm-001-clip-force',
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [7, 8], // Castforming + Welding
     },
     {
@@ -169,7 +169,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/006',
       plant: 'Doureca Portugal',
       document_link: null,
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [1, 3], // Injection + Paint
     },
     {
@@ -182,7 +182,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/002',
       plant: 'Dourdin Romania',
       document_link: null,
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [2], // Chrome
     },
     {
@@ -195,7 +195,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/007',
       plant: 'Dourdin France',
       document_link: null,
-      status: 'NOT_VISIBLE',
+      status: 'REJECTED',
       processes: [3], // Paint
     },
     {
@@ -208,7 +208,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/004',
       plant: 'Durden Turkey',
       document_link: null,
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [8], // Welding
     },
     {
@@ -234,7 +234,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/006',
       plant: 'Doureca Portugal',
       document_link: null,
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [1, 9], // Injection + Film
     },
     {
@@ -247,7 +247,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/005',
       plant: 'Dourdin Romania',
       document_link: null,
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [2], // Chrome
     },
     {
@@ -260,7 +260,7 @@ function seedIfEmpty() {
       project: 'Proj-2026/001',
       plant: 'Doureca Portugal',
       document_link: 'https://docs.dourdin.com/gp/inj-002-cooling-standard',
-      status: 'VISIBLE',
+      status: 'APPROVED',
       processes: [1], // Injection
       derived_from_id: 1, // Derived from item 1 (LL-INJ-001)
     },

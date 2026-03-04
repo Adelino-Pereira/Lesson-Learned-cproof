@@ -47,7 +47,7 @@ export class KnowledgeApiService {
     return this.http.delete(`${this.baseUrl}/${id}`);
   }
 
-  updateStatus(id: number, visibility_status: 'VISIBLE' | 'NOT_VISIBLE'): Observable<KnowledgeItem> {
+  updateStatus(id: number, visibility_status: 'APPROVED' | 'REJECTED'): Observable<KnowledgeItem> {
     return this.http.patch<KnowledgeItem>(`${this.baseUrl}/${id}/status`, { visibility_status });
   }
 

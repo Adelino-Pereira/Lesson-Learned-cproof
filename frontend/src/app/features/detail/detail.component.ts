@@ -230,10 +230,10 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
           <button mat-raised-button color="primary" (click)="saveEdit()">SAVE</button>
         } @else {
           @if (item.visibility_status === 'PENDING' && permissions.hasPermission('knowledge:validate')) {
-            <button mat-raised-button class="validate-btn" (click)="validate('VISIBLE')" [disabled]="validating">
+            <button mat-raised-button class="validate-btn" (click)="validate('APPROVED')" [disabled]="validating">
               <mat-icon>check_circle</mat-icon> VALIDATE
             </button>
-            <button mat-raised-button class="reject-btn" (click)="validate('NOT_VISIBLE')" [disabled]="validating">
+            <button mat-raised-button class="reject-btn" (click)="validate('REJECTED')" [disabled]="validating">
               <mat-icon>cancel</mat-icon> REJECT
             </button>
           }
@@ -247,8 +247,11 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
                 </mat-select>
               </mat-form-field>
               <button mat-raised-button (click)="officialising = false">CANCEL</button>
-              <button mat-raised-button class="validate-btn" (click)="confirmOfficialise()" [disabled]="!officialiseTypeId || creatingDerived">
-                CONFIRM
+              <button mat-raised-button class="officialise-btn" (click)="confirmOfficialise('transform')" [disabled]="!officialiseTypeId || creatingDerived">
+                TRANSFORM
+              </button>
+              <button mat-raised-button class="validate-btn" (click)="confirmOfficialise('create')" [disabled]="!officialiseTypeId || creatingDerived">
+                CREATE NEW
               </button>
             } @else {
               <button mat-raised-button class="officialise-btn" (click)="officialising = true">
@@ -310,8 +313,8 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
       width: fit-content;
     }
     .status-PENDING { background: #fff8e1; color: #f57f17; }
-    .status-VISIBLE { background: #e8f5e9; color: #2e7d32; }
-    .status-NOT_VISIBLE { background: #eeeeee; color: #616161; }
+    .status-APPROVED { background: #e8f5e9; color: #2e7d32; }
+    .status-REJECTED { background: #eeeeee; color: #616161; }
     .validate-btn {
       background-color: #2e7d32 !important;
       color: #fff !important;
@@ -389,7 +392,7 @@ export class DetailDialogComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.masterData.getTypes().subscribe(t => this.types = t);
+    this.masterData.getTypes().subscribe(t => this.types = t.filter(x => x.id !== 3 && x.id !== 4));
     this.masterData.getProcesses().subscribe(p => this.allProcesses = p);
     this.knowledgeApi.getById(this.data.itemId).subscribe(item => {
       this.item = item;
@@ -408,13 +411,13 @@ export class DetailDialogComponent implements OnInit {
     this.editing = false;
   }
 
-  validate(status: 'VISIBLE' | 'NOT_VISIBLE') {
+  validate(status: 'APPROVED' | 'REJECTED') {
     if (!this.item) return;
     this.validating = true;
     this.knowledgeApi.updateStatus(this.item.id, status).subscribe({
       next: (updated) => {
         this.item!.visibility_status = updated.visibility_status;
-        const label = status === 'VISIBLE' ? 'validated' : 'rejected';
+        const label = status === 'APPROVED' ? 'validated' : 'rejected';
         this.snackBar.open(`Item ${label} successfully`, 'Close', { duration: 3000 });
         this.validating = false;
         this.modified = true;
@@ -464,40 +467,67 @@ export class DetailDialogComponent implements OnInit {
     });
   }
 
-  confirmOfficialise() {
+  confirmOfficialise(mode: 'transform' | 'create') {
     if (!this.item || !this.officialiseTypeId) return;
     this.creatingDerived = true;
+    const typeLabel = this.officialiseTypeId === 4 ? 'Good-practice' : 'Guide-line';
 
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    if (mode === 'transform') {
+      const body = {
+        title: this.item.title,
+        designation: this.item.designation,
+        date: this.item.date,
+        owner: this.item.owner,
+        author: this.item.author,
+        type_id: this.officialiseTypeId,
+        project: this.item.project,
+        plant: this.item.plant,
+        document_link: this.item.document_link,
+        processes: this.item.processes.map(p => p.id),
+      };
+      this.knowledgeApi.update(this.item.id, body).subscribe({
+        next: () => {
+          this.snackBar.open(`Item transformed into ${typeLabel}`, 'Close', { duration: 3000 });
+          this.creatingDerived = false;
+          this.officialising = false;
+          this.dialogRef.close('updated');
+        },
+        error: () => {
+          this.snackBar.open('Failed to transform item', 'Close', { duration: 3000 });
+          this.creatingDerived = false;
+        },
+      });
+    } else {
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    const body = {
-      title: this.item.title,
-      designation: this.item.designation,
-      date: dateStr,
-      owner: this.item.owner,
-      author: this.item.author,
-      type_id: this.officialiseTypeId,
-      project: this.item.project,
-      plant: this.item.plant,
-      document_link: this.item.document_link,
-      processes: JSON.stringify(this.item.processes.map(p => p.id)),
-      derived_from_id: this.item.id,
-    };
+      const body = {
+        title: this.item.title,
+        designation: this.item.designation,
+        date: dateStr,
+        owner: this.item.owner,
+        author: this.item.author,
+        type_id: this.officialiseTypeId,
+        project: this.item.project,
+        plant: this.item.plant,
+        document_link: this.item.document_link,
+        processes: JSON.stringify(this.item.processes.map(p => p.id)),
+        derived_from_id: this.item.id,
+      };
 
-    this.knowledgeApi.createJson(body).subscribe({
-      next: () => {
-        const typeLabel = this.officialiseTypeId === 4 ? 'Good-practice' : 'Guide-line';
-        this.snackBar.open(`${typeLabel} created from this item`, 'Close', { duration: 3000 });
-        this.creatingDerived = false;
-        this.officialising = false;
-        this.dialogRef.close('updated');
-      },
-      error: () => {
-        this.snackBar.open('Failed to create derived item', 'Close', { duration: 3000 });
-        this.creatingDerived = false;
-      },
-    });
+      this.knowledgeApi.createJson(body).subscribe({
+        next: () => {
+          this.snackBar.open(`New ${typeLabel} created from this item`, 'Close', { duration: 3000 });
+          this.creatingDerived = false;
+          this.officialising = false;
+          this.dialogRef.close('updated');
+        },
+        error: () => {
+          this.snackBar.open('Failed to create derived item', 'Close', { duration: 3000 });
+          this.creatingDerived = false;
+        },
+      });
+    }
   }
 
   close() {

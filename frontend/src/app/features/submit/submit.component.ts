@@ -255,7 +255,7 @@ export class SubmitComponent implements OnInit {
       document_link: [''],
     });
 
-    this.masterData.getTypes().subscribe(t => this.types = t);
+    this.masterData.getTypes().subscribe(t => this.types = t.filter(x => x.id !== 3 && x.id !== 4));
     this.masterData.getProcesses().subscribe(p => this.processList = p);
   }
 

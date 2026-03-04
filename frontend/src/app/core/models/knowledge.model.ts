@@ -23,7 +23,7 @@ export interface KnowledgeItem {
   project: string | null;
   plant: string | null;
   document_link: string | null;
-  visibility_status: 'PENDING' | 'VISIBLE' | 'NOT_VISIBLE';
+  visibility_status: 'PENDING' | 'APPROVED' | 'REJECTED';
   is_active: number;
   created_at: string;
   type_code?: string;

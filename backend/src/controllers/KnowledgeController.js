@@ -251,9 +251,9 @@ class KnowledgeController {
     const { id } = req.params;
     const { visibility_status } = req.body;
 
-    const allowed = ['VISIBLE', 'NOT_VISIBLE'];
+    const allowed = ['APPROVED', 'REJECTED'];
     if (!allowed.includes(visibility_status)) {
-      return res.status(400).json({ error: 'visibility_status must be VISIBLE or NOT_VISIBLE' });
+      return res.status(400).json({ error: 'visibility_status must be APPROVED or REJECTED' });
     }
 
     try {

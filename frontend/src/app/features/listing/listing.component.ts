@@ -210,8 +210,8 @@ import { DetailDialogComponent } from '../detail/detail.component';
       font-weight: 500;
     }
     .status-PENDING { background: #fff8e1; color: #f57f17; }
-    .status-VISIBLE { background: #e8f5e9; color: #2e7d32; }
-    .status-NOT_VISIBLE { background: #eeeeee; color: #616161; }
+    .status-APPROVED { background: #e8f5e9; color: #2e7d32; }
+    .status-REJECTED { background: #eeeeee; color: #616161; }
     .delete-icon { color: #c62828; }
   `],
 })
@@ -240,7 +240,7 @@ export class ListingComponent implements OnInit {
       ? [...base, 'actions']
       : base;
     if (!canValidate) {
-      this.filters.visibility_status = 'VISIBLE';
+      this.filters.visibility_status = 'APPROVED';
     }
   }
 
@@ -268,7 +268,7 @@ export class ListingComponent implements OnInit {
   clearFilters() {
     this.filters = {};
     if (!this.permissions.hasPermission('knowledge:validate')) {
-      this.filters.visibility_status = 'VISIBLE';
+      this.filters.visibility_status = 'APPROVED';
     }
     this.loadData();
   }
