@@ -142,8 +142,11 @@ export class DocumentsUsedComponent implements OnInit {
   }
 
   onProjectChange() {
-    if (this.selectedProject) {
+    if (!this.selectedProject) return;
+    if (this.canEdit) {
       this.knowledgeApi.getItemsWithUsage(this.selectedProject).subscribe(items => this.items = items);
+    } else {
+      this.knowledgeApi.getDocumentsUsed(this.selectedProject).subscribe(items => this.items = items as any);
     }
   }
 
