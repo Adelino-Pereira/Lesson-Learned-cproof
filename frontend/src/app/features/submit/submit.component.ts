@@ -98,14 +98,6 @@ import { MasterType, MasterProcess } from '../../core/models/knowledge.model';
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Author</mat-label>
-            <input matInput formControlName="author" placeholder="Enter author name">
-            @if (form.get('author')?.hasError('required') && form.get('author')?.touched) {
-              <mat-error>Author is required</mat-error>
-            }
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
             <mat-label>Type</mat-label>
             <mat-select formControlName="type_id">
               @for (t of types; track t.id) {
