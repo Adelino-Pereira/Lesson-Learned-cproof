@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { MatTableModule } from "@angular/material/table";
 import { MatSelectModule } from "@angular/material/select";
+import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatCardModule } from "@angular/material/card";
 import { MatIconModule } from "@angular/material/icon";
@@ -19,9 +20,12 @@ import {
 
 import { KnowledgeApiService } from "../../core/services/knowledge-api.service";
 import { PermissionService } from "../../core/services/permission.service";
+import { MasterDataService } from "../../core/services/master-data.service";
 import {
   KnowledgeItem,
   KnowledgeItemWithUsage,
+  MasterType,
+  MasterProcess,
 } from "../../core/models/knowledge.model";
 
 // ---- Add Document Dialog ----
@@ -30,17 +34,54 @@ import {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatTableModule,
     MatSlideToggleModule,
     MatButtonModule,
     MatIconModule,
     MatDialogModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
   ],
   template: `
     <h2 mat-dialog-title>Add Documents to {{ data.project }}</h2>
     <mat-dialog-content>
-      @if (items.length > 0) {
-        <table mat-table [dataSource]="items" class="full-width">
+      <div class="filter-row">
+        <mat-form-field appearance="outline" class="filter-field search-field">
+          <mat-label>Search title</mat-label>
+          <input matInput [(ngModel)]="filterTitle" (ngModelChange)="applyFilters()" placeholder="Search...">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Type</mat-label>
+          <mat-select [(ngModel)]="filterType" (selectionChange)="applyFilters()">
+            <mat-option [value]="null">All</mat-option>
+            @for (t of types; track t.id) {
+              <mat-option [value]="t.id">{{ t.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Designation</mat-label>
+          <input matInput [(ngModel)]="filterDesignation" (ngModelChange)="applyFilters()" placeholder="Filter...">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Processes</mat-label>
+          <mat-select [(ngModel)]="filterProcess" (selectionChange)="applyFilters()">
+            <mat-option [value]="null">All</mat-option>
+            @for (p of processList; track p.id) {
+              <mat-option [value]="p.label">{{ p.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      @if (filteredItems.length > 0) {
+        <table mat-table [dataSource]="filteredItems" class="full-width">
           <ng-container matColumnDef="selected">
             <th mat-header-cell *matHeaderCellDef>Select</th>
             <td mat-cell *matCellDef="let row">
@@ -86,6 +127,8 @@ import {
             [class.used-row]="row.is_used === 1"
           ></tr>
         </table>
+      } @else if (items.length > 0) {
+        <p class="muted">No documents match the current filters.</p>
       } @else {
         <p class="muted">No approved documents available.</p>
       }
@@ -104,6 +147,19 @@ import {
   `,
   styles: [
     `
+      .filter-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+      .filter-field {
+        flex: 1;
+        min-width: 160px;
+      }
+      .search-field {
+        flex: 2;
+      }
       .full-width {
         width: 100%;
       }
@@ -133,6 +189,7 @@ import {
 })
 export class AddDocumentDialogComponent implements OnInit {
   items: KnowledgeItemWithUsage[] = [];
+  filteredItems: KnowledgeItemWithUsage[] = [];
   columns = [
     "selected",
     "title",
@@ -143,18 +200,50 @@ export class AddDocumentDialogComponent implements OnInit {
   saving = false;
   private changes: { id: number; add: boolean }[] = [];
 
+  types: MasterType[] = [];
+  processList: MasterProcess[] = [];
+  filterTitle = "";
+  filterType: number | null = null;
+  filterDesignation = "";
+  filterProcess: string | null = null;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { project: string },
     private dialogRef: MatDialogRef<AddDocumentDialogComponent>,
     private knowledgeApi: KnowledgeApiService,
+    private masterData: MasterDataService,
   ) {}
 
   ngOnInit() {
+    this.masterData.getTypes().subscribe((t) => (this.types = t));
+    this.masterData.getProcesses().subscribe((p) => (this.processList = p));
     this.knowledgeApi
       .getItemsWithUsage(this.data.project)
       .subscribe((items) => {
         this.items = items.filter((i) => i.visibility_status === "APPROVED");
+        this.filteredItems = [...this.items];
       });
+  }
+
+  applyFilters() {
+    this.filteredItems = this.items.filter((item) => {
+      if (this.filterTitle && !item.title.toLowerCase().includes(this.filterTitle.toLowerCase())) {
+        return false;
+      }
+      if (this.filterType != null && item.type_id !== this.filterType) {
+        return false;
+      }
+      if (this.filterDesignation && !(item.designation || "").toLowerCase().includes(this.filterDesignation.toLowerCase())) {
+        return false;
+      }
+      if (this.filterProcess) {
+        const labels = (item.process_labels || "").split(",").map((l) => l.trim());
+        if (!labels.includes(this.filterProcess)) {
+          return false;
+        }
+      }
+      return true;
+    });
   }
 
   toggle(row: KnowledgeItemWithUsage, checked: boolean) {
