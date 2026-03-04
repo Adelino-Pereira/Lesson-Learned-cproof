@@ -40,19 +40,19 @@ import { DetailDialogComponent } from '../detail/detail.component';
         <button mat-flat-button
           [class.active]="activeStatus === 'PENDING'"
           [class.status-pending-btn]="activeStatus === 'PENDING'"
-          (click)="filterByStatus('PENDING')">PENDING</button>
+          (click)="filterByStatus('PENDING')">PENDING ({{ statusCounts.PENDING }})</button>
         <button mat-flat-button
           [class.active]="activeStatus === 'APPROVED'"
           [class.status-approved-btn]="activeStatus === 'APPROVED'"
-          (click)="filterByStatus('APPROVED')">APPROVED</button>
+          (click)="filterByStatus('APPROVED')">APPROVED ({{ statusCounts.APPROVED }})</button>
         <button mat-flat-button
           [class.active]="activeStatus === 'REJECTED'"
           [class.status-rejected-btn]="activeStatus === 'REJECTED'"
-          (click)="filterByStatus('REJECTED')">REJECTED</button>
+          (click)="filterByStatus('REJECTED')">REJECTED ({{ statusCounts.REJECTED }})</button>
         <button mat-flat-button
           [class.active]="activeStatus === 'ALL'"
           [class.status-all-btn]="activeStatus === 'ALL'"
-          (click)="filterByStatus('ALL')">ALL</button>
+          (click)="filterByStatus('ALL')">ALL ({{ statusCounts.ALL }})</button>
       </div>
     }
 
@@ -272,6 +272,7 @@ export class ListingComponent implements OnInit {
   processes: MasterProcess[] = [];
   canValidate = false;
   activeStatus: string = 'PENDING';
+  statusCounts = { PENDING: 0, APPROVED: 0, REJECTED: 0, ALL: 0 };
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -311,6 +312,22 @@ export class ListingComponent implements OnInit {
   loadData() {
     this.knowledgeApi.getAll(this.filters).subscribe(items => {
       this.dataSource.data = items;
+    });
+    if (this.canValidate) {
+      this.loadCounts();
+    }
+  }
+
+  loadCounts() {
+    const countFilters: KnowledgeFilters = { ...this.filters };
+    delete countFilters.visibility_status;
+    this.knowledgeApi.getAll(countFilters).subscribe(items => {
+      this.statusCounts = {
+        PENDING: items.filter(i => i.visibility_status === 'PENDING').length,
+        APPROVED: items.filter(i => i.visibility_status === 'APPROVED').length,
+        REJECTED: items.filter(i => i.visibility_status === 'REJECTED').length,
+        ALL: items.length,
+      };
     });
   }
 
