@@ -35,6 +35,27 @@ import { DetailDialogComponent } from '../detail/detail.component';
     MatSnackBarModule, MatTooltipModule,
   ],
   template: `
+    @if (canValidate) {
+      <div class="status-filter-bar">
+        <button mat-flat-button
+          [class.active]="activeStatus === 'PENDING'"
+          [class.status-pending-btn]="activeStatus === 'PENDING'"
+          (click)="filterByStatus('PENDING')">PENDING</button>
+        <button mat-flat-button
+          [class.active]="activeStatus === 'APPROVED'"
+          [class.status-approved-btn]="activeStatus === 'APPROVED'"
+          (click)="filterByStatus('APPROVED')">APPROVED</button>
+        <button mat-flat-button
+          [class.active]="activeStatus === 'REJECTED'"
+          [class.status-rejected-btn]="activeStatus === 'REJECTED'"
+          (click)="filterByStatus('REJECTED')">REJECTED</button>
+        <button mat-flat-button
+          [class.active]="activeStatus === 'ALL'"
+          [class.status-all-btn]="activeStatus === 'ALL'"
+          (click)="filterByStatus('ALL')">ALL</button>
+      </div>
+    }
+
     <mat-accordion>
       <mat-expansion-panel>
         <mat-expansion-panel-header>
@@ -213,6 +234,34 @@ import { DetailDialogComponent } from '../detail/detail.component';
     .status-APPROVED { background: #e8f5e9; color: #2e7d32; }
     .status-REJECTED { background: #eeeeee; color: #616161; }
     .delete-icon { color: #c62828; }
+    .status-filter-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .status-filter-bar button {
+      background: #e0e0e0;
+      color: #616161;
+      font-weight: 500;
+      min-width: 100px;
+    }
+    .status-filter-bar button.status-pending-btn {
+      background: #fff8e1;
+      color: #f57f17;
+    }
+    .status-filter-bar button.status-approved-btn {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .status-filter-bar button.status-rejected-btn {
+      background: #eeeeee;
+      color: #616161;
+      font-weight: 700;
+    }
+    .status-filter-bar button.status-all-btn {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
   `],
 })
 export class ListingComponent implements OnInit {
@@ -221,6 +270,8 @@ export class ListingComponent implements OnInit {
   filters: KnowledgeFilters = {};
   types: MasterType[] = [];
   processes: MasterProcess[] = [];
+  canValidate = false;
+  activeStatus: string = 'PENDING';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -233,14 +284,16 @@ export class ListingComponent implements OnInit {
     private snackBar: MatSnackBar,
     public permissions: PermissionService,
   ) {
-    const canValidate = this.permissions.hasPermission('knowledge:validate');
+    this.canValidate = this.permissions.hasPermission('knowledge:validate');
     const base = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date'];
-    if (canValidate) base.push('visibility_status');
+    if (this.canValidate) base.push('visibility_status');
     this.displayedColumns = this.permissions.hasPermission('knowledge:edit')
       ? [...base, 'actions']
       : base;
-    if (!canValidate) {
+    if (!this.canValidate) {
       this.filters.visibility_status = 'APPROVED';
+    } else {
+      this.filters.visibility_status = 'PENDING';
     }
   }
 
@@ -265,11 +318,15 @@ export class ListingComponent implements OnInit {
     this.loadData();
   }
 
+  filterByStatus(status: string) {
+    this.activeStatus = status;
+    this.filters.visibility_status = status === 'ALL' ? undefined : status;
+    this.loadData();
+  }
+
   clearFilters() {
-    this.filters = {};
-    if (!this.permissions.hasPermission('knowledge:validate')) {
-      this.filters.visibility_status = 'APPROVED';
-    }
+    const status = this.canValidate ? this.activeStatus : 'APPROVED';
+    this.filters = { visibility_status: status };
     this.loadData();
   }
 
