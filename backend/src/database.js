@@ -32,6 +32,16 @@ function initSchema() {
       is_active INTEGER NOT NULL DEFAULT 1
     );
 
+    CREATE TABLE IF NOT EXISTS master_project (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      designation TEXT NOT NULL,
+      name        TEXT NOT NULL,
+      description TEXT,
+      customer    TEXT NOT NULL,
+      vehicle     TEXT NOT NULL,
+      is_active   INTEGER NOT NULL DEFAULT 1
+    );
+
     CREATE TABLE IF NOT EXISTS knowledge_item (
       id                INTEGER PRIMARY KEY AUTOINCREMENT,
       title             TEXT NOT NULL,
@@ -40,7 +50,7 @@ function initSchema() {
       owner             TEXT NOT NULL,
       author            TEXT NOT NULL,
       type_id           INTEGER NOT NULL,
-      project           TEXT,
+      project_id        INTEGER,
       plant             TEXT,
       document_link     TEXT,
       derived_from_id   INTEGER DEFAULT NULL,
@@ -48,6 +58,7 @@ function initSchema() {
       is_active         INTEGER NOT NULL DEFAULT 1,
       created_at        TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (type_id) REFERENCES master_type(id),
+      FOREIGN KEY (project_id) REFERENCES master_project(id),
       FOREIGN KEY (derived_from_id) REFERENCES knowledge_item(id)
     );
 
@@ -70,10 +81,11 @@ function initSchema() {
     );
 
     CREATE TABLE IF NOT EXISTS project_knowledge_item (
-      project           TEXT NOT NULL,
+      project_id        INTEGER NOT NULL,
       knowledge_item_id INTEGER NOT NULL,
       added_at          TEXT NOT NULL DEFAULT (datetime('now')),
-      PRIMARY KEY (project, knowledge_item_id),
+      PRIMARY KEY (project_id, knowledge_item_id),
+      FOREIGN KEY (project_id) REFERENCES master_project(id),
       FOREIGN KEY (knowledge_item_id) REFERENCES knowledge_item(id)
     );
   `);

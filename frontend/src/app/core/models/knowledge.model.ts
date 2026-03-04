@@ -12,6 +12,16 @@ export interface MasterProcess {
   is_active: number;
 }
 
+export interface MasterProject {
+  id: number;
+  designation: string;
+  name: string;
+  description: string | null;
+  customer: string;
+  vehicle: string;
+  is_active: number;
+}
+
 export interface KnowledgeItem {
   id: number;
   title: string;
@@ -20,7 +30,7 @@ export interface KnowledgeItem {
   owner: string;
   author: string;
   type_id: number;
-  project: string | null;
+  project_id: number | null;
   plant: string | null;
   document_link: string | null;
   visibility_status: 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -31,6 +41,10 @@ export interface KnowledgeItem {
   process_labels?: string;
   derived_from_id: number | null;
   derived_from_title?: string;
+  project_designation?: string;
+  project_name?: string;
+  project_customer?: string;
+  project_vehicle?: string;
 }
 
 export interface KnowledgeItemWithUsage extends KnowledgeItem {
@@ -65,7 +79,7 @@ export interface StatsResponse {
 export interface KnowledgeFilters {
   type?: number;
   process?: number;
-  project?: string;
+  project_id?: number;
   owner?: string;
   author?: string;
   plant?: string;

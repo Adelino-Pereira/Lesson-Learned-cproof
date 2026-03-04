@@ -16,7 +16,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
 import { PermissionService } from '../../core/services/permission.service';
-import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/models/knowledge.model';
+import { KnowledgeItemDetail, MasterType, MasterProcess, MasterProject } from '../../core/models/knowledge.model';
 
 @Component({
   selector: 'app-detail-dialog',
@@ -118,14 +118,14 @@ import { KnowledgeItemDetail, MasterType, MasterProcess } from '../../core/model
             <span class="label">Project</span>
             @if (editing) {
               <mat-form-field appearance="outline" class="edit-field">
-                <mat-select [(ngModel)]="item.project">
-                  @for (proj of projects; track proj) {
-                    <mat-option [value]="proj">{{ proj }}</mat-option>
+                <mat-select [(ngModel)]="item.project_id">
+                  @for (proj of projects; track proj.id) {
+                    <mat-option [value]="proj.id">{{ proj.name }} ({{ proj.designation }})</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
             } @else {
-              <span>{{ item.project || '—' }}</span>
+              <span>{{ item.project_name || '—' }}</span>
             }
           </div>
 
@@ -373,10 +373,7 @@ export class DetailDialogComponent implements OnInit {
   selectedProcessIds: number[] = [];
 
   plants = ['Doureca Portugal', 'Dourdin Romania', 'Dourdin France', 'Durden Turkey'];
-  projects = [
-    'Proj-2026/001', 'Proj-2026/002', 'Proj-2026/003', 'Proj-2026/004', 'Proj-2026/005',
-    'Proj-2026/006', 'Proj-2026/007', 'Proj-2026/008', 'Proj-2026/009', 'Proj-2026/010',
-  ];
+  projects: MasterProject[] = [];
 
   private itemSnapshot: string = '';
   private modified = false;
@@ -394,6 +391,7 @@ export class DetailDialogComponent implements OnInit {
   ngOnInit() {
     this.masterData.getTypes().subscribe(t => this.types = t.filter(x => x.id !== 3 && x.id !== 4));
     this.masterData.getProcesses().subscribe(p => this.allProcesses = p);
+    this.knowledgeApi.getProjects().subscribe(p => this.projects = p);
     this.knowledgeApi.getById(this.data.itemId).subscribe(item => {
       this.item = item;
       this.selectedProcessIds = item.processes.map(p => p.id);
@@ -438,7 +436,7 @@ export class DetailDialogComponent implements OnInit {
       owner: this.item.owner,
       author: this.item.author,
       type_id: this.item.type_id,
-      project: this.item.project,
+      project_id: this.item.project_id,
       plant: this.item.plant,
       document_link: this.item.document_link,
       processes: this.selectedProcessIds,
@@ -480,7 +478,7 @@ export class DetailDialogComponent implements OnInit {
         owner: this.item.owner,
         author: this.item.author,
         type_id: this.officialiseTypeId,
-        project: this.item.project,
+        project_id: this.item.project_id,
         plant: this.item.plant,
         document_link: this.item.document_link,
         processes: this.item.processes.map(p => p.id),
@@ -508,7 +506,7 @@ export class DetailDialogComponent implements OnInit {
         owner: this.item.owner,
         author: this.item.author,
         type_id: this.officialiseTypeId,
-        project: this.item.project,
+        project_id: this.item.project_id,
         plant: this.item.plant,
         document_link: this.item.document_link,
         processes: JSON.stringify(this.item.processes.map(p => p.id)),

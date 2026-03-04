@@ -2,9 +2,69 @@ const { getDb } = require('../database');
 
 class ProjectController {
 
+  static getProjects(req, res) {
+    const db = getDb();
+    const { search, customer } = req.query;
+
+    let sql = 'SELECT * FROM master_project WHERE is_active = 1';
+    const params = [];
+
+    if (search) {
+      sql += ' AND (name LIKE ? OR designation LIKE ? OR customer LIKE ? OR vehicle LIKE ? OR description LIKE ?)';
+      const term = `%${search}%`;
+      params.push(term, term, term, term, term);
+    }
+    if (customer) {
+      sql += ' AND customer = ?';
+      params.push(customer);
+    }
+
+    sql += ' ORDER BY customer, vehicle, name';
+
+    try {
+      const rows = db.prepare(sql).all(...params);
+      res.json(rows);
+    } catch (err) {
+      console.error('[ProjectController.getProjects]', err.message);
+      res.status(500).json({ error: 'Failed to fetch projects' });
+    }
+  }
+
+  static getCustomers(req, res) {
+    const db = getDb();
+    try {
+      const rows = db.prepare(
+        "SELECT DISTINCT customer FROM master_project WHERE is_active = 1 ORDER BY customer"
+      ).all();
+      res.json(rows.map(r => r.customer));
+    } catch (err) {
+      console.error('[ProjectController.getCustomers]', err.message);
+      res.status(500).json({ error: 'Failed to fetch customers' });
+    }
+  }
+
+  static getVehicles(req, res) {
+    const db = getDb();
+    const { customer } = req.query;
+    let sql = 'SELECT DISTINCT vehicle FROM master_project WHERE is_active = 1';
+    const params = [];
+    if (customer) {
+      sql += ' AND customer = ?';
+      params.push(customer);
+    }
+    sql += ' ORDER BY vehicle';
+    try {
+      const rows = db.prepare(sql).all(...params);
+      res.json(rows.map(r => r.vehicle));
+    } catch (err) {
+      console.error('[ProjectController.getVehicles]', err.message);
+      res.status(500).json({ error: 'Failed to fetch vehicles' });
+    }
+  }
+
   static getDocumentsUsed(req, res) {
     const db = getDb();
-    const { project } = req.params;
+    const { projectId } = req.params;
 
     try {
       const rows = db.prepare(`
@@ -18,10 +78,10 @@ class ProjectController {
         LEFT JOIN master_type mt ON mt.id = ki.type_id
         LEFT JOIN knowledge_item_process kip ON kip.knowledge_item_id = ki.id
         LEFT JOIN master_process mp ON mp.id = kip.process_id
-        WHERE pki.project = ? AND ki.is_active = 1
+        WHERE pki.project_id = ? AND ki.is_active = 1
         GROUP BY ki.id
         ORDER BY ki.date DESC
-      `).all(project);
+      `).all(projectId);
 
       res.json(rows);
     } catch (err) {
@@ -32,7 +92,7 @@ class ProjectController {
 
   static getItemsWithUsage(req, res) {
     const db = getDb();
-    const { project } = req.params;
+    const { projectId } = req.params;
 
     try {
       const rows = db.prepare(`
@@ -45,11 +105,11 @@ class ProjectController {
         LEFT JOIN master_type mt ON mt.id = ki.type_id
         LEFT JOIN knowledge_item_process kip ON kip.knowledge_item_id = ki.id
         LEFT JOIN master_process mp ON mp.id = kip.process_id
-        LEFT JOIN project_knowledge_item pki ON pki.knowledge_item_id = ki.id AND pki.project = ?
+        LEFT JOIN project_knowledge_item pki ON pki.knowledge_item_id = ki.id AND pki.project_id = ?
         WHERE ki.is_active = 1
         GROUP BY ki.id
         ORDER BY is_used DESC, ki.date DESC
-      `).all(project);
+      `).all(projectId);
 
       res.json(rows);
     } catch (err) {
@@ -60,11 +120,11 @@ class ProjectController {
 
   static linkDocument(req, res) {
     const db = getDb();
-    const { project } = req.params;
+    const { projectId } = req.params;
     const { knowledge_item_id } = req.body;
 
     try {
-      db.prepare('INSERT OR IGNORE INTO project_knowledge_item (project, knowledge_item_id) VALUES (?, ?)').run(project, knowledge_item_id);
+      db.prepare('INSERT OR IGNORE INTO project_knowledge_item (project_id, knowledge_item_id) VALUES (?, ?)').run(projectId, knowledge_item_id);
       res.json({ message: 'Linked' });
     } catch (err) {
       console.error('[ProjectController.linkDocument]', err.message);
@@ -74,25 +134,14 @@ class ProjectController {
 
   static unlinkDocument(req, res) {
     const db = getDb();
-    const { project, itemId } = req.params;
+    const { projectId, itemId } = req.params;
 
     try {
-      db.prepare('DELETE FROM project_knowledge_item WHERE project = ? AND knowledge_item_id = ?').run(project, itemId);
+      db.prepare('DELETE FROM project_knowledge_item WHERE project_id = ? AND knowledge_item_id = ?').run(projectId, itemId);
       res.json({ message: 'Unlinked' });
     } catch (err) {
       console.error('[ProjectController.unlinkDocument]', err.message);
       res.status(500).json({ error: 'Failed to unlink document' });
-    }
-  }
-
-  static getProjects(req, res) {
-    const db = getDb();
-    try {
-      const rows = db.prepare("SELECT DISTINCT project FROM knowledge_item WHERE is_active = 1 AND project IS NOT NULL AND project != '' ORDER BY project").all();
-      res.json(rows.map(r => r.project));
-    } catch (err) {
-      console.error('[ProjectController.getProjects]', err.message);
-      res.status(500).json({ error: 'Failed to fetch projects' });
     }
   }
 }

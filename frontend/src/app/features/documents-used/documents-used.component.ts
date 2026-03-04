@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
+import { FormsModule, ReactiveFormsModule, FormControl } from "@angular/forms";
 import { MatTableModule } from "@angular/material/table";
 import { MatSelectModule } from "@angular/material/select";
 import { MatInputModule } from "@angular/material/input";
@@ -11,6 +11,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatChipsModule } from "@angular/material/chips";
+import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import {
   MatDialog,
   MatDialogModule,
@@ -26,6 +27,7 @@ import {
   KnowledgeItemWithUsage,
   MasterType,
   MasterProcess,
+  MasterProject,
 } from "../../core/models/knowledge.model";
 
 // ---- Add Document Dialog ----
@@ -45,7 +47,7 @@ import {
     MatInputModule,
   ],
   template: `
-    <h2 mat-dialog-title>Add Documents to {{ data.project }}</h2>
+    <h2 mat-dialog-title>Add Documents to {{ data.projectName }}</h2>
     <mat-dialog-content>
       <div class="filter-row">
         <mat-form-field appearance="outline" class="filter-field search-field">
@@ -208,7 +210,7 @@ export class AddDocumentDialogComponent implements OnInit {
   filterProcess: string | null = null;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { project: string },
+    @Inject(MAT_DIALOG_DATA) public data: { projectId: number; projectName: string },
     private dialogRef: MatDialogRef<AddDocumentDialogComponent>,
     private knowledgeApi: KnowledgeApiService,
     private masterData: MasterDataService,
@@ -218,7 +220,7 @@ export class AddDocumentDialogComponent implements OnInit {
     this.masterData.getTypes().subscribe((t) => (this.types = t));
     this.masterData.getProcesses().subscribe((p) => (this.processList = p));
     this.knowledgeApi
-      .getItemsWithUsage(this.data.project)
+      .getItemsWithUsage(this.data.projectId)
       .subscribe((items) => {
         this.items = items.filter((i) => i.visibility_status === "APPROVED");
         this.filteredItems = [...this.items];
@@ -262,9 +264,9 @@ export class AddDocumentDialogComponent implements OnInit {
     let completed = 0;
     for (const change of this.changes) {
       const action$ = change.add
-        ? this.knowledgeApi.linkDocumentToProject(this.data.project, change.id)
+        ? this.knowledgeApi.linkDocumentToProject(this.data.projectId, change.id)
         : this.knowledgeApi.unlinkDocumentFromProject(
-            this.data.project,
+            this.data.projectId,
             change.id,
           );
       action$.subscribe({
@@ -296,8 +298,10 @@ export class AddDocumentDialogComponent implements OnInit {
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     MatTableModule,
     MatSelectModule,
+    MatInputModule,
     MatFormFieldModule,
     MatCardModule,
     MatIconModule,
@@ -305,6 +309,7 @@ export class AddDocumentDialogComponent implements OnInit {
     MatSnackBarModule,
     MatChipsModule,
     MatDialogModule,
+    MatAutocompleteModule,
   ],
   template: `
     <div class="header-row">
@@ -314,14 +319,30 @@ export class AddDocumentDialogComponent implements OnInit {
     <div class="controls-row">
       <mat-form-field appearance="outline" class="project-select">
         <mat-label>Select Project</mat-label>
-        <mat-select
-          [(ngModel)]="selectedProject"
-          (selectionChange)="onProjectChange()"
-        >
-          @for (p of projects; track p) {
-            <mat-option [value]="p">{{ p }}</mat-option>
+        <input matInput
+          [formControl]="searchControl"
+          [matAutocomplete]="projectAuto"
+          placeholder="Search by name, customer, vehicle...">
+        <mat-icon matSuffix>search</mat-icon>
+        @if (selectedProject) {
+          <button matSuffix mat-icon-button (click)="clearProject($event)">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+        <mat-autocomplete #projectAuto="matAutocomplete"
+          [displayWith]="displayProject"
+          (optionSelected)="onProjectSelected($event)">
+          @for (group of filteredGroups; track group.customer) {
+            <mat-optgroup [label]="group.customer">
+              @for (proj of group.projects; track proj.id) {
+                <mat-option [value]="proj">
+                  <div class="option-line1">{{ proj.name }}</div>
+                  <div class="option-line2">{{ proj.vehicle }} &middot; {{ proj.designation }}</div>
+                </mat-option>
+              }
+            </mat-optgroup>
           }
-        </mat-select>
+        </mat-autocomplete>
       </mat-form-field>
 
       @if (selectedProject && canEdit) {
@@ -401,7 +422,7 @@ export class AddDocumentDialogComponent implements OnInit {
         margin-bottom: 16px;
       }
       .project-select {
-        width: 300px;
+        width: 450px;
       }
       .full-width {
         width: 100%;
@@ -420,12 +441,21 @@ export class AddDocumentDialogComponent implements OnInit {
         font-size: 12px;
         margin: 1px 2px;
       }
+      .option-line1 {
+        font-weight: 500;
+      }
+      .option-line2 {
+        font-size: 12px;
+        color: #666;
+      }
     `,
   ],
 })
 export class DocumentsUsedComponent implements OnInit {
-  projects: string[] = [];
-  selectedProject: string | null = null;
+  allProjects: MasterProject[] = [];
+  filteredGroups: { customer: string; projects: MasterProject[] }[] = [];
+  selectedProject: MasterProject | null = null;
+  searchControl = new FormControl("");
   items: KnowledgeItem[] = [];
   displayedColumns = [
     "id",
@@ -448,18 +478,62 @@ export class DocumentsUsedComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.knowledgeApi.getProjects().subscribe((p) => (this.projects = p));
+    this.knowledgeApi.getProjects().subscribe((projects) => {
+      this.allProjects = projects;
+      this.filterProjects("");
+    });
+
+    this.searchControl.valueChanges.subscribe((value) => {
+      if (typeof value === "string") {
+        this.filterProjects(value);
+      }
+    });
   }
 
-  onProjectChange() {
-    if (!this.selectedProject) return;
+  filterProjects(search: string) {
+    const term = (search || "").toLowerCase();
+    const filtered = this.allProjects.filter(
+      (p) =>
+        p.name.toLowerCase().includes(term) ||
+        p.designation.toLowerCase().includes(term) ||
+        p.customer.toLowerCase().includes(term) ||
+        p.vehicle.toLowerCase().includes(term) ||
+        (p.description || "").toLowerCase().includes(term),
+    );
+
+    const grouped = new Map<string, MasterProject[]>();
+    for (const proj of filtered) {
+      const list = grouped.get(proj.customer) || [];
+      list.push(proj);
+      grouped.set(proj.customer, list);
+    }
+
+    this.filteredGroups = Array.from(grouped.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([customer, projects]) => ({ customer, projects }));
+  }
+
+  displayProject = (proj: MasterProject | string): string => {
+    if (!proj || typeof proj === "string") return proj as string;
+    return `${proj.name} (${proj.designation})`;
+  };
+
+  onProjectSelected(event: any) {
+    this.selectedProject = event.option.value;
     this.loadLinkedDocuments();
+  }
+
+  clearProject(event: Event) {
+    event.stopPropagation();
+    this.selectedProject = null;
+    this.searchControl.setValue("");
+    this.items = [];
   }
 
   loadLinkedDocuments() {
     if (!this.selectedProject) return;
     this.knowledgeApi
-      .getDocumentsUsed(this.selectedProject)
+      .getDocumentsUsed(this.selectedProject.id)
       .subscribe((items) => (this.items = items));
   }
 
@@ -469,7 +543,10 @@ export class DocumentsUsedComponent implements OnInit {
       width: "80vw",
       maxWidth: "80vw",
       maxHeight: "80vh",
-      data: { project: this.selectedProject },
+      data: {
+        projectId: this.selectedProject.id,
+        projectName: this.selectedProject.name,
+      },
     });
     ref.afterClosed().subscribe((result) => {
       if (result === "updated") {

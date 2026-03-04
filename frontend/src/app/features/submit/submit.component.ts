@@ -43,7 +43,7 @@ const APP_DATE_FORMATS = {
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
 import { AuthService } from '../../core/services/auth.service';
-import { MasterType, MasterProcess } from '../../core/models/knowledge.model';
+import { MasterType, MasterProcess, MasterProject } from '../../core/models/knowledge.model';
 
 @Component({
   selector: 'app-submit',
@@ -111,9 +111,9 @@ import { MasterType, MasterProcess } from '../../core/models/knowledge.model';
 
           <mat-form-field appearance="outline">
             <mat-label>Project</mat-label>
-            <mat-select formControlName="project">
-              @for (proj of projects; track proj) {
-                <mat-option [value]="proj">{{ proj }}</mat-option>
+            <mat-select formControlName="project_id">
+              @for (proj of projects; track proj.id) {
+                <mat-option [value]="proj.id">{{ proj.name }} ({{ proj.designation }})</mat-option>
               }
             </mat-select>
           </mat-form-field>
@@ -227,10 +227,7 @@ export class SubmitComponent implements OnInit {
   submitting = false;
 
   plants = ['Doureca Portugal', 'Dourdin Romania', 'Dourdin France', 'Durden Turkey'];
-  projects = [
-    'Proj-2026/001', 'Proj-2026/002', 'Proj-2026/003', 'Proj-2026/004', 'Proj-2026/005',
-    'Proj-2026/006', 'Proj-2026/007', 'Proj-2026/008', 'Proj-2026/009', 'Proj-2026/010',
-  ];
+  projects: MasterProject[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -249,7 +246,7 @@ export class SubmitComponent implements OnInit {
       owner: ['', Validators.required],
       author: [this.authService.currentUser?.name || '', Validators.required],
       type_id: [null, Validators.required],
-      project: [''],
+      project_id: [null],
       plant: [''],
       processes: [[]],
       document_link: [''],
@@ -257,6 +254,7 @@ export class SubmitComponent implements OnInit {
 
     this.masterData.getTypes().subscribe(t => this.types = t.filter(x => x.id !== 3 && x.id !== 4));
     this.masterData.getProcesses().subscribe(p => this.processList = p);
+    this.knowledgeApi.getProjects().subscribe(p => this.projects = p);
   }
 
   onDocumentSelected(event: Event) {
@@ -286,7 +284,7 @@ export class SubmitComponent implements OnInit {
     formData.append('owner', values.owner);
     formData.append('author', values.author);
     formData.append('type_id', values.type_id);
-    formData.append('project', values.project || '');
+    formData.append('project_id', values.project_id || '');
     formData.append('plant', values.plant || '');
     formData.append('processes', JSON.stringify(values.processes || []));
     formData.append('document_link', values.document_link || '');

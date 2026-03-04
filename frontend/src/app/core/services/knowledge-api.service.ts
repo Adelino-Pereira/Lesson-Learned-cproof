@@ -7,6 +7,7 @@ import {
   KnowledgeItemWithUsage,
   KnowledgeFilters,
   StatsResponse,
+  MasterProject,
 } from '../models/knowledge.model';
 
 @Injectable({ providedIn: 'root' })
@@ -55,23 +56,23 @@ export class KnowledgeApiService {
     return this.http.get<StatsResponse>(`${this.baseUrl}/stats`);
   }
 
-  getDocumentsUsed(project: string): Observable<KnowledgeItem[]> {
-    return this.http.get<KnowledgeItem[]>(`/api/projects/${encodeURIComponent(project)}/documents-used`);
+  getDocumentsUsed(projectId: number): Observable<KnowledgeItem[]> {
+    return this.http.get<KnowledgeItem[]>(`/api/projects/${projectId}/documents-used`);
   }
 
-  getItemsWithUsage(project: string): Observable<KnowledgeItemWithUsage[]> {
-    return this.http.get<KnowledgeItemWithUsage[]>(`/api/projects/${encodeURIComponent(project)}/items-with-usage`);
+  getItemsWithUsage(projectId: number): Observable<KnowledgeItemWithUsage[]> {
+    return this.http.get<KnowledgeItemWithUsage[]>(`/api/projects/${projectId}/items-with-usage`);
   }
 
-  linkDocumentToProject(project: string, itemId: number): Observable<any> {
-    return this.http.post(`/api/projects/${encodeURIComponent(project)}/documents-used`, { knowledge_item_id: itemId });
+  linkDocumentToProject(projectId: number, itemId: number): Observable<any> {
+    return this.http.post(`/api/projects/${projectId}/documents-used`, { knowledge_item_id: itemId });
   }
 
-  unlinkDocumentFromProject(project: string, itemId: number): Observable<any> {
-    return this.http.delete(`/api/projects/${encodeURIComponent(project)}/documents-used/${itemId}`);
+  unlinkDocumentFromProject(projectId: number, itemId: number): Observable<any> {
+    return this.http.delete(`/api/projects/${projectId}/documents-used/${itemId}`);
   }
 
-  getProjects(): Observable<string[]> {
-    return this.http.get<string[]>('/api/projects');
+  getProjects(): Observable<MasterProject[]> {
+    return this.http.get<MasterProject[]>('/api/projects');
   }
 }

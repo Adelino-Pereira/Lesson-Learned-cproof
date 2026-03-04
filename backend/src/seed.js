@@ -42,9 +42,31 @@ function seedIfEmpty() {
     insertProcess.run(code, label);
   }
 
+  // --- Master Projects ---
+  const insertProject = db.prepare(
+    'INSERT INTO master_project (designation, name, description, customer, vehicle) VALUES (?, ?, ?, ?, ?)'
+  );
+  const projects = [
+    ['Proj-2026/001', 'C3 Aircross Facelift', 'MY2027 facelift - new front grille and bumper', 'Stellantis', 'Citroen C3 Aircross'],
+    ['Proj-2026/002', '2008 II Chrome Pack', 'Chrome exterior trim package for Peugeot 2008 II', 'Stellantis', 'Peugeot 2008'],
+    ['Proj-2026/003', 'Megane E-Tech Bumper', 'Rear bumper assembly for Megane E-Tech electric', 'Renault', 'Renault Megane E-Tech'],
+    ['Proj-2026/004', 'Golf IX Grille', 'Front grille and lower air intake assembly', 'Volkswagen', 'Volkswagen Golf'],
+    ['Proj-2026/005', 'Duster III Trim', 'Interior B-pillar and C-pillar trim', 'Renault', 'Dacia Duster'],
+    ['Proj-2026/006', '308 III Exterior Trim', 'Side mouldings and wheel arch trims', 'Stellantis', 'Peugeot 308'],
+    ['Proj-2026/007', 'Clio VI Front End', 'Front bumper, fog lamp bezels, and DRL housing', 'Renault', 'Renault Clio'],
+    ['Proj-2026/008', 'X1 U11 Rear Bumper', 'Painted rear bumper with PDC integration', 'BMW', 'BMW X1'],
+    ['Proj-2026/009', 'Captur III Mirror Caps', 'Chrome and body-coloured mirror cap variants', 'Renault', 'Renault Captur'],
+    ['Proj-2026/010', 'T-Roc Facelift Grille', 'Active shutter grille assembly', 'Volkswagen', 'Volkswagen T-Roc'],
+    ['Proj-2025/015', 'Corsa F Door Handles', 'Flush door handle assemblies with chrome finish', 'Stellantis', 'Opel Corsa'],
+    ['Proj-2025/018', 'ID.4 Charge Port', 'Charge port door with illuminated ring', 'Volkswagen', 'Volkswagen ID.4'],
+  ];
+  for (const [designation, name, description, customer, vehicle] of projects) {
+    insertProject.run(designation, name, description, customer, vehicle);
+  }
+
   // --- Knowledge Items ---
   const insertItem = db.prepare(`
-    INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, document_link, visibility_status, derived_from_id)
+    INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project_id, plant, document_link, visibility_status, derived_from_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const insertItemProcess = db.prepare('INSERT INTO knowledge_item_process (knowledge_item_id, process_id) VALUES (?, ?)');
@@ -52,7 +74,7 @@ function seedIfEmpty() {
     INSERT INTO knowledge_item_file (knowledge_item_id, file_kind, filename_original, storage_path)
     VALUES (?, ?, ?, ?)
   `);
-  const insertProjectLink = db.prepare('INSERT INTO project_knowledge_item (project, knowledge_item_id) VALUES (?, ?)');
+  const insertProjectLink = db.prepare('INSERT INTO project_knowledge_item (project_id, knowledge_item_id) VALUES (?, ?)');
 
   const items = [
     {
@@ -62,7 +84,7 @@ function seedIfEmpty() {
       owner: 'Carlos Silva',
       author: 'Ana Rodrigues',
       type_id: 6, // Lessons-learned
-      project: 'Proj-2026/001',
+      project_id: 1,
       plant: 'Doureca Portugal',
       document_link: 'https://docs.dourdin.com/ll/inj-001-cooling-redesign',
       status: 'APPROVED',
@@ -75,7 +97,7 @@ function seedIfEmpty() {
       owner: 'Andrei Popescu',
       author: 'Andrei Popescu',
       type_id: 6, // Lessons-learned
-      project: 'Proj-2026/002',
+      project_id: 2,
       plant: 'Dourdin Romania',
       document_link: 'https://docs.dourdin.com/ll/chr-001-adhesion-loss',
       status: 'APPROVED',
@@ -88,7 +110,7 @@ function seedIfEmpty() {
       owner: 'Pierre Dumont',
       author: 'Pierre Dumont',
       type_id: 1, // Documentation
-      project: 'Proj-2026/003',
+      project_id: 3,
       plant: 'Dourdin France',
       document_link: 'https://docs.dourdin.com/doc/pnt-001-airflow-calibration',
       status: 'APPROVED',
@@ -101,7 +123,7 @@ function seedIfEmpty() {
       owner: 'Mehmet Yilmaz',
       author: 'Mehmet Yilmaz',
       type_id: 4, // Good-practice
-      project: 'Proj-2026/004',
+      project_id: 4,
       plant: 'Durden Turkey',
       document_link: null,
       status: 'APPROVED',
@@ -114,7 +136,7 @@ function seedIfEmpty() {
       owner: 'Ana Rodrigues',
       author: 'Carlos Silva',
       type_id: 3, // Guide-line
-      project: 'Proj-2026/001',
+      project_id: 1,
       plant: 'Doureca Portugal',
       document_link: 'https://docs.dourdin.com/gl/inj-002-resin-moisture',
       status: 'APPROVED',
@@ -127,7 +149,7 @@ function seedIfEmpty() {
       owner: 'Andrei Popescu',
       author: 'Elena Stanescu',
       type_id: 6, // Lessons-learned
-      project: 'Proj-2026/005',
+      project_id: 5,
       plant: 'Dourdin Romania',
       document_link: null,
       status: 'PENDING',
@@ -140,7 +162,7 @@ function seedIfEmpty() {
       owner: 'Pierre Dumont',
       author: 'Marie Laurent',
       type_id: 2, // Recommendation
-      project: 'Proj-2026/003',
+      project_id: 3,
       plant: 'Dourdin France',
       document_link: null,
       status: 'APPROVED',
@@ -153,7 +175,7 @@ function seedIfEmpty() {
       owner: 'Mehmet Yilmaz',
       author: 'Ayse Demir',
       type_id: 1, // Documentation
-      project: 'Proj-2026/004',
+      project_id: 4,
       plant: 'Durden Turkey',
       document_link: 'https://docs.dourdin.com/doc/asm-001-clip-force',
       status: 'APPROVED',
@@ -166,7 +188,7 @@ function seedIfEmpty() {
       owner: 'Carlos Silva',
       author: 'Ana Rodrigues',
       type_id: 4, // Good-practice
-      project: 'Proj-2026/006',
+      project_id: 6,
       plant: 'Doureca Portugal',
       document_link: null,
       status: 'APPROVED',
@@ -179,7 +201,7 @@ function seedIfEmpty() {
       owner: 'Elena Stanescu',
       author: 'Andrei Popescu',
       type_id: 3, // Guide-line
-      project: 'Proj-2026/002',
+      project_id: 2,
       plant: 'Dourdin Romania',
       document_link: null,
       status: 'APPROVED',
@@ -192,7 +214,7 @@ function seedIfEmpty() {
       owner: 'Marie Laurent',
       author: 'Pierre Dumont',
       type_id: 6, // Lessons-learned
-      project: 'Proj-2026/007',
+      project_id: 7,
       plant: 'Dourdin France',
       document_link: null,
       status: 'REJECTED',
@@ -205,7 +227,7 @@ function seedIfEmpty() {
       owner: 'Ayse Demir',
       author: 'Mehmet Yilmaz',
       type_id: 1, // Documentation
-      project: 'Proj-2026/004',
+      project_id: 4,
       plant: 'Durden Turkey',
       document_link: null,
       status: 'APPROVED',
@@ -218,7 +240,7 @@ function seedIfEmpty() {
       owner: 'Ana Rodrigues',
       author: 'Elena Stanescu',
       type_id: 2, // Recommendation
-      project: 'Proj-2026/001',
+      project_id: 1,
       plant: 'Doureca Portugal',
       document_link: null,
       status: 'PENDING',
@@ -231,7 +253,7 @@ function seedIfEmpty() {
       owner: 'Carlos Silva',
       author: 'Carlos Silva',
       type_id: 6, // Lessons-learned
-      project: 'Proj-2026/006',
+      project_id: 6,
       plant: 'Doureca Portugal',
       document_link: null,
       status: 'APPROVED',
@@ -244,7 +266,7 @@ function seedIfEmpty() {
       owner: 'Andrei Popescu',
       author: 'Andrei Popescu',
       type_id: 2, // Recommendation
-      project: 'Proj-2026/005',
+      project_id: 5,
       plant: 'Dourdin Romania',
       document_link: null,
       status: 'APPROVED',
@@ -257,7 +279,7 @@ function seedIfEmpty() {
       owner: 'Carlos Silva',
       author: 'Ana Rodrigues',
       type_id: 4, // Good-practice (derived from LL-INJ-001, item 1)
-      project: 'Proj-2026/001',
+      project_id: 1,
       plant: 'Doureca Portugal',
       document_link: 'https://docs.dourdin.com/gp/inj-002-cooling-standard',
       status: 'APPROVED',
@@ -271,7 +293,7 @@ function seedIfEmpty() {
       const result = insertItem.run(
         item.title, item.designation, item.date,
         item.owner, item.author, item.type_id,
-        item.project, item.plant, item.document_link, item.status,
+        item.project_id, item.plant, item.document_link, item.status,
         item.derived_from_id || null
       );
       const itemId = result.lastInsertRowid;
@@ -281,7 +303,9 @@ function seedIfEmpty() {
       }
 
       // Link to project
-      insertProjectLink.run(item.project, itemId);
+      if (item.project_id) {
+        insertProjectLink.run(item.project_id, itemId);
+      }
     }
 
     // Add dummy file attachments
@@ -293,7 +317,7 @@ function seedIfEmpty() {
   });
 
   seedAll();
-  console.log('[SEED] Inserted 16 knowledge items, 6 types, 9 processes');
+  console.log('[SEED] Inserted 12 projects, 16 knowledge items, 6 types, 9 processes');
 }
 
 module.exports = { seedIfEmpty };

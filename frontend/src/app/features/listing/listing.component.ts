@@ -20,7 +20,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
 import { PermissionService } from '../../core/services/permission.service';
-import { KnowledgeItem, KnowledgeFilters, MasterType, MasterProcess } from '../../core/models/knowledge.model';
+import { KnowledgeItem, KnowledgeFilters, MasterType, MasterProcess, MasterProject } from '../../core/models/knowledge.model';
 import { DetailDialogComponent } from '../detail/detail.component';
 
 @Component({
@@ -88,7 +88,12 @@ import { DetailDialogComponent } from '../detail/detail.component';
 
           <mat-form-field appearance="outline">
             <mat-label>Project</mat-label>
-            <input matInput [(ngModel)]="filters.project" (change)="applyFilters()" placeholder="e.g. PRJ-ALPHA">
+            <mat-select [(ngModel)]="filters.project_id" (selectionChange)="applyFilters()">
+              <mat-option [value]="undefined">All</mat-option>
+              @for (proj of projects; track proj.id) {
+                <mat-option [value]="proj.id">{{ proj.name }} ({{ proj.designation }})</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
@@ -156,7 +161,7 @@ import { DetailDialogComponent } from '../detail/detail.component';
 
         <ng-container matColumnDef="project">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Project</th>
-          <td mat-cell *matCellDef="let row">{{ row.project }}</td>
+          <td mat-cell *matCellDef="let row">{{ row.project_name || '—' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="date">
@@ -270,6 +275,7 @@ export class ListingComponent implements OnInit {
   filters: KnowledgeFilters = {};
   types: MasterType[] = [];
   processes: MasterProcess[] = [];
+  projects: MasterProject[] = [];
   canValidate = false;
   activeStatus: string = 'PENDING';
   statusCounts = { PENDING: 0, APPROVED: 0, REJECTED: 0, ALL: 0 };
@@ -301,6 +307,7 @@ export class ListingComponent implements OnInit {
   ngOnInit() {
     this.masterData.getTypes().subscribe(t => this.types = t);
     this.masterData.getProcesses().subscribe(p => this.processes = p);
+    this.knowledgeApi.getProjects().subscribe(p => this.projects = p);
     this.loadData();
   }
 

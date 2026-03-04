@@ -4,19 +4,24 @@ class KnowledgeController {
 
   static list(req, res) {
     const db = getDb();
-    const { type, process, project, owner, author, plant, date_from, date_to, visibility_status } = req.query;
+    const { type, process, project_id, owner, author, plant, date_from, date_to, visibility_status } = req.query;
 
     let sql = `
       SELECT ki.*,
              mt.code  AS type_code,
              mt.label AS type_label,
              GROUP_CONCAT(DISTINCT mp.label) AS process_labels,
-             parent.title AS derived_from_title
+             parent.title AS derived_from_title,
+             proj.designation AS project_designation,
+             proj.name AS project_name,
+             proj.customer AS project_customer,
+             proj.vehicle AS project_vehicle
       FROM knowledge_item ki
       LEFT JOIN master_type mt ON mt.id = ki.type_id
       LEFT JOIN knowledge_item_process kip ON kip.knowledge_item_id = ki.id
       LEFT JOIN master_process mp ON mp.id = kip.process_id
       LEFT JOIN knowledge_item parent ON parent.id = ki.derived_from_id
+      LEFT JOIN master_project proj ON proj.id = ki.project_id
       WHERE ki.is_active = 1
     `;
     const params = [];
@@ -25,9 +30,9 @@ class KnowledgeController {
       sql += ' AND ki.type_id = ?';
       params.push(type);
     }
-    if (project) {
-      sql += ' AND ki.project = ?';
-      params.push(project);
+    if (project_id) {
+      sql += ' AND ki.project_id = ?';
+      params.push(project_id);
     }
     if (owner) {
       sql += ' AND ki.owner = ?';
@@ -78,10 +83,15 @@ class KnowledgeController {
         SELECT ki.*,
                mt.code  AS type_code,
                mt.label AS type_label,
-               parent.title AS derived_from_title
+               parent.title AS derived_from_title,
+               proj.designation AS project_designation,
+               proj.name AS project_name,
+               proj.customer AS project_customer,
+               proj.vehicle AS project_vehicle
         FROM knowledge_item ki
         LEFT JOIN master_type mt ON mt.id = ki.type_id
         LEFT JOIN knowledge_item parent ON parent.id = ki.derived_from_id
+        LEFT JOIN master_project proj ON proj.id = ki.project_id
         WHERE ki.id = ?
       `).get(id);
 
@@ -111,7 +121,7 @@ class KnowledgeController {
 
   static create(req, res) {
     const db = getDb();
-    const { title, designation, date, owner, author, type_id, project, plant, document_link, processes, derived_from_id } = req.body;
+    const { title, designation, date, owner, author, type_id, project_id, plant, document_link, processes, derived_from_id } = req.body;
 
     if (!title || !date || !owner || !author || !type_id) {
       return res.status(400).json({ error: 'Missing required fields: title, date, owner, author, type_id' });
@@ -119,11 +129,11 @@ class KnowledgeController {
 
     try {
       const insertItem = db.prepare(`
-        INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project, plant, document_link, visibility_status, is_active, derived_from_id)
+        INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project_id, plant, document_link, visibility_status, is_active, derived_from_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 1, ?)
       `);
 
-      const result = insertItem.run(title, designation || null, date, owner, author, type_id, project || null, plant || null, document_link || null, derived_from_id || null);
+      const result = insertItem.run(title, designation || null, date, owner, author, type_id, project_id || null, plant || null, document_link || null, derived_from_id || null);
       const itemId = result.lastInsertRowid;
 
       // Link processes (M2M)
@@ -134,8 +144,8 @@ class KnowledgeController {
       }
 
       // Link to project
-      if (project) {
-        db.prepare('INSERT OR IGNORE INTO project_knowledge_item (project, knowledge_item_id) VALUES (?, ?)').run(project, itemId);
+      if (project_id) {
+        db.prepare('INSERT OR IGNORE INTO project_knowledge_item (project_id, knowledge_item_id) VALUES (?, ?)').run(project_id, itemId);
       }
 
       // Save file metadata
@@ -165,7 +175,7 @@ class KnowledgeController {
   static update(req, res) {
     const db = getDb();
     const { id } = req.params;
-    const { title, designation, date, owner, author, type_id, project, plant, document_link, processes } = req.body;
+    const { title, designation, date, owner, author, type_id, project_id, plant, document_link, processes } = req.body;
 
     if (!title || !date || !owner || !author || !type_id) {
       return res.status(400).json({ error: 'Missing required fields: title, date, owner, author, type_id' });
@@ -181,9 +191,9 @@ class KnowledgeController {
         db.prepare(`
           UPDATE knowledge_item
           SET title = ?, designation = ?, date = ?, owner = ?, author = ?,
-              type_id = ?, project = ?, plant = ?, document_link = ?
+              type_id = ?, project_id = ?, plant = ?, document_link = ?
           WHERE id = ?
-        `).run(title, designation || null, date, owner, author, type_id, project || null, plant || null, document_link || null, id);
+        `).run(title, designation || null, date, owner, author, type_id, project_id || null, plant || null, document_link || null, id);
 
         // Replace process links
         db.prepare('DELETE FROM knowledge_item_process WHERE knowledge_item_id = ?').run(id);
@@ -195,8 +205,8 @@ class KnowledgeController {
 
         // Update project link
         db.prepare('DELETE FROM project_knowledge_item WHERE knowledge_item_id = ?').run(id);
-        if (project) {
-          db.prepare('INSERT OR IGNORE INTO project_knowledge_item (project, knowledge_item_id) VALUES (?, ?)').run(project, id);
+        if (project_id) {
+          db.prepare('INSERT OR IGNORE INTO project_knowledge_item (project_id, knowledge_item_id) VALUES (?, ?)').run(project_id, id);
         }
       });
 
