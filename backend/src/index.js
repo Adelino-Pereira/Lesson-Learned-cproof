@@ -1,3 +1,9 @@
+/**
+ * index.js — Express application entry point.
+ * Sets up middleware, mounts API routes, serves static files,
+ * initializes the database schema, seeds demo data, and starts the server.
+ */
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -8,30 +14,31 @@ const apiRoutes = require('./routes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// --- Middleware ---
+app.use(cors());                                  // Allow cross-origin requests (Angular dev server)
+app.use(express.json());                          // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded form data
 
-// Serve uploaded files statically
+// Serve uploaded files (documents, images) as static assets
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// API routes
+// Mount all API routes under /api prefix
 app.use('/api', apiRoutes);
 
-// Health check
+// Health check endpoint for monitoring / Docker health checks
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// Serve Angular frontend (production build)
+// --- Static frontend serving (production/Docker) ---
+// Serves the Angular build output and falls back to index.html for SPA routing
 const publicPath = path.join(__dirname, '..', 'public');
 app.use(express.static(publicPath));
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// Initialize database and start server
-initSchema();
-seedIfEmpty();
+// --- Startup: initialize DB schema and seed demo data ---
+initSchema();   // Creates tables if they don't exist
+seedIfEmpty();  // Inserts demo data on first run
 
 app.listen(PORT, () => {
   console.log(`[SERVER] Backend running on http://localhost:${PORT}`);

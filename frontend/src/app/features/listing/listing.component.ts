@@ -1,3 +1,14 @@
+/**
+ * listing.component.ts — Knowledge item listing page.
+ * Displays a filterable, sortable, paginated table of knowledge items.
+ * Features:
+ *   - Title search with server-side LIKE filtering
+ *   - Multi-criteria filters (type, process, project, customer, plant, dates)
+ *   - Status quick-filter buttons with counts (for admin/validator roles)
+ *   - Row click opens the detail dialog
+ *   - Inline edit/delete actions (for authorized roles)
+ */
+
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -298,12 +309,17 @@ export class ListingComponent implements OnInit {
     private snackBar: MatSnackBar,
     public permissions: PermissionService,
   ) {
+    // Determine if the user can validate items (admin/power-user)
     this.canValidate = this.permissions.hasPermission('knowledge:validate');
+
+    // Build displayed columns based on role: validators see status, editors see actions
     const base = ['id', 'type_label', 'designation', 'process_labels', 'owner', 'project', 'author', 'date'];
     if (this.canValidate) base.push('visibility_status');
     this.displayedColumns = this.permissions.hasPermission('knowledge:edit')
       ? [...base, 'actions']
       : base;
+
+    // Default filter: validators see PENDING items first, regular users see APPROVED only
     if (!this.canValidate) {
       this.filters.visibility_status = 'APPROVED';
     } else {
@@ -312,6 +328,7 @@ export class ListingComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Load master data for filter dropdowns
     this.masterData.getTypes().subscribe(t => this.types = t);
     this.masterData.getProcesses().subscribe(p => this.processes = p);
     this.knowledgeApi.getProjects().subscribe(p => this.projects = p);
@@ -319,10 +336,12 @@ export class ListingComponent implements OnInit {
   }
 
   ngAfterViewInit() {
+    // Wire up Material paginator and sort to the table data source
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
 
+  /** Fetches items from the API using current filters and updates status counts */
   loadData() {
     this.knowledgeApi.getAll(this.filters).subscribe(items => {
       this.dataSource.data = items;
@@ -332,6 +351,7 @@ export class ListingComponent implements OnInit {
     }
   }
 
+  /** Fetches all items (ignoring status filter) to compute counts for the status buttons */
   loadCounts() {
     const countFilters: KnowledgeFilters = { ...this.filters };
     delete countFilters.visibility_status;
@@ -378,6 +398,7 @@ export class ListingComponent implements OnInit {
     });
   }
 
+  /** Opens the detail dialog for a knowledge item; refreshes the table if the item was modified */
   goToDetail(id: number) {
     const ref = this.dialog.open(DetailDialogComponent, {
       width: '90vw',

@@ -1,7 +1,19 @@
+/**
+ * ProjectController.js — Handles project queries and the "Documents Used" feature.
+ * Provides project listing with search, customer/vehicle lookups, and
+ * CRUD for linking knowledge items to projects (documents-used junction).
+ */
+
 const { getDb } = require('../database');
 
 class ProjectController {
 
+  /**
+   * GET /api/projects
+   * Lists active projects with optional search (across name, designation,
+   * customer, vehicle, description) and customer filter.
+   * Sorted by customer → vehicle → name for grouped display.
+   */
   static getProjects(req, res) {
     const db = getDb();
     const { search, customer } = req.query;
@@ -9,6 +21,7 @@ class ProjectController {
     let sql = 'SELECT * FROM master_project WHERE is_active = 1';
     const params = [];
 
+    // Full-text-like search across multiple fields
     if (search) {
       sql += ' AND (name LIKE ? OR designation LIKE ? OR customer LIKE ? OR vehicle LIKE ? OR description LIKE ?)';
       const term = `%${search}%`;
@@ -30,6 +43,7 @@ class ProjectController {
     }
   }
 
+  /** GET /api/projects/customers — Returns distinct customer (OEM) names. */
   static getCustomers(req, res) {
     const db = getDb();
     try {
@@ -43,6 +57,7 @@ class ProjectController {
     }
   }
 
+  /** GET /api/projects/vehicles — Returns distinct vehicle names, optionally filtered by customer. */
   static getVehicles(req, res) {
     const db = getDb();
     const { customer } = req.query;
@@ -62,6 +77,11 @@ class ProjectController {
     }
   }
 
+  /**
+   * GET /api/projects/:projectId/documents-used
+   * Returns all knowledge items linked to a project via the junction table.
+   * Includes type info and aggregated process labels.
+   */
   static getDocumentsUsed(req, res) {
     const db = getDb();
     const { projectId } = req.params;
@@ -90,11 +110,18 @@ class ProjectController {
     }
   }
 
+  /**
+   * GET /api/projects/:projectId/items-with-usage
+   * Returns ALL active knowledge items with an is_used flag (1/0) indicating
+   * whether each item is linked to the given project.
+   * Used by the Add Document dialog to show toggle switches.
+   */
   static getItemsWithUsage(req, res) {
     const db = getDb();
     const { projectId } = req.params;
 
     try {
+      // LEFT JOIN on junction table: is_used = 1 if linked, 0 otherwise
       const rows = db.prepare(`
         SELECT ki.*,
                mt.code  AS type_code,
@@ -118,6 +145,10 @@ class ProjectController {
     }
   }
 
+  /**
+   * POST /api/projects/:projectId/documents-used
+   * Links a knowledge item to a project. Uses INSERT OR IGNORE to prevent duplicates.
+   */
   static linkDocument(req, res) {
     const db = getDb();
     const { projectId } = req.params;
@@ -132,6 +163,10 @@ class ProjectController {
     }
   }
 
+  /**
+   * DELETE /api/projects/:projectId/documents-used/:itemId
+   * Removes the link between a knowledge item and a project.
+   */
   static unlinkDocument(req, res) {
     const db = getDb();
     const { projectId, itemId } = req.params;

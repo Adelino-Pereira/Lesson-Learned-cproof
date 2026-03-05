@@ -1,3 +1,14 @@
+/**
+ * documents-used.component.ts — Documents Used feature.
+ * Contains two components:
+ *
+ * 1. AddDocumentDialogComponent — Dialog for linking/unlinking knowledge items
+ *    to a project. Shows all APPROVED items with toggle switches and filters.
+ *
+ * 2. DocumentsUsedComponent — Main page with searchable project autocomplete
+ *    (grouped by customer/OEM) and a table of linked knowledge items.
+ */
+
 import { Component, OnInit, Inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule, ReactiveFormsModule, FormControl } from "@angular/forms";
@@ -216,7 +227,7 @@ export class AddDocumentDialogComponent implements OnInit {
     "process_labels",
   ];
   saving = false;
-  private changes: { id: number; add: boolean }[] = [];
+  private changes: { id: number; add: boolean }[] = [];  // Tracks toggle changes to batch on confirm
 
   types: MasterType[] = [];
   processList: MasterProcess[] = [];
@@ -236,6 +247,7 @@ export class AddDocumentDialogComponent implements OnInit {
   ngOnInit() {
     this.masterData.getTypes().subscribe((t) => (this.types = t));
     this.masterData.getProcesses().subscribe((p) => (this.processList = p));
+    // Fetch all items with is_used flag; only show APPROVED items for selection
     this.knowledgeApi
       .getItemsWithUsage(this.data.projectId)
       .subscribe((items) => {
@@ -244,6 +256,7 @@ export class AddDocumentDialogComponent implements OnInit {
       });
   }
 
+  /** Client-side filtering of items by title, type, designation, and process */
   applyFilters() {
     this.filteredItems = this.items.filter((item) => {
       if (
@@ -275,6 +288,7 @@ export class AddDocumentDialogComponent implements OnInit {
     });
   }
 
+  /** Records a toggle change; replaces any previous change for the same item */
   toggle(row: KnowledgeItemWithUsage, checked: boolean) {
     row.is_used = checked ? 1 : 0;
     const existing = this.changes.findIndex((c) => c.id === row.id);
@@ -282,6 +296,7 @@ export class AddDocumentDialogComponent implements OnInit {
     this.changes.push({ id: row.id, add: checked });
   }
 
+  /** Applies all accumulated toggle changes (link/unlink API calls) in parallel */
   confirm() {
     if (this.changes.length === 0) {
       this.dialogRef.close("updated");
@@ -514,11 +529,13 @@ export class DocumentsUsedComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Load all projects for the autocomplete
     this.knowledgeApi.getProjects().subscribe((projects) => {
       this.allProjects = projects;
       this.filterProjects("");
     });
 
+    // React to autocomplete input changes to filter the grouped dropdown
     this.searchControl.valueChanges.subscribe((value) => {
       if (typeof value === "string") {
         this.filterProjects(value);
@@ -526,6 +543,7 @@ export class DocumentsUsedComponent implements OnInit {
     });
   }
 
+  /** Filters projects by search term and groups them by customer (OEM) for mat-optgroup display */
   filterProjects(search: string) {
     const term = (search || "").toLowerCase();
     const filtered = this.allProjects.filter(
@@ -549,6 +567,7 @@ export class DocumentsUsedComponent implements OnInit {
       .map(([customer, projects]) => ({ customer, projects }));
   }
 
+  /** Display function for mat-autocomplete — shows "Name (Designation)" in the input */
   displayProject = (proj: MasterProject | string): string => {
     if (!proj || typeof proj === "string") return proj as string;
     return `${proj.name} (${proj.designation})`;
@@ -573,6 +592,7 @@ export class DocumentsUsedComponent implements OnInit {
       .subscribe((items) => (this.items = items));
   }
 
+  /** Opens the Add Document dialog; refreshes the linked items table on close */
   openAddDialog() {
     if (!this.selectedProject) return;
     const ref = this.dialog.open(AddDocumentDialogComponent, {

@@ -1,7 +1,13 @@
+/**
+ * MasterController.js — Provides read-only access to master/reference data.
+ * Returns active types and processes used to populate dropdowns in the frontend.
+ */
+
 const { getDb } = require('../database');
 
 class MasterController {
 
+  /** GET /api/master/types — Returns all active knowledge item types, sorted by label. */
   static getTypes(req, res) {
     const db = getDb();
     try {
@@ -13,6 +19,7 @@ class MasterController {
     }
   }
 
+  /** GET /api/master/processes — Returns all active manufacturing processes, sorted by label. */
   static getProcesses(req, res) {
     const db = getDb();
     try {

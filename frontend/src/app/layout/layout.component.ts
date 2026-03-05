@@ -1,3 +1,12 @@
+/**
+ * layout.component.ts — Main application shell.
+ * Replicates the DCS production layout with:
+ *   - Dark sidebar with navigation icons (only Knowledge Database is active)
+ *   - Top toolbar with module title, user info, role badge, and logout
+ *   - Navigation button bar (Listing, Submit, Documents Used, Statistics)
+ *   - Router outlet for feature content
+ */
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';

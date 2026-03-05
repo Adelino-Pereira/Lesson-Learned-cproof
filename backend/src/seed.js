@@ -1,8 +1,16 @@
+/**
+ * seed.js — Seeds the database with initial demo data on first startup.
+ * Inserts master types, processes, projects, and sample knowledge items.
+ * Idempotent: only runs if master_type table is empty.
+ * To reset data, delete backend/data.db and restart the server.
+ */
+
 const { getDb } = require('./database');
 
 function seedIfEmpty() {
   const db = getDb();
 
+  // Skip seeding if data already exists (idempotent check)
   const typeCount = db.prepare('SELECT COUNT(*) as c FROM master_type').get().c;
   if (typeCount > 0) {
     console.log('[SEED] Data already exists, skipping seed');
@@ -11,7 +19,7 @@ function seedIfEmpty() {
 
   console.log('[SEED] Seeding database...');
 
-  // --- Master Types ---
+  // --- Master Types (6 categories for classifying knowledge items) ---
   const insertType = db.prepare('INSERT INTO master_type (code, label) VALUES (?, ?)');
   const types = [
     ['DOC', 'Documentation'],     // 1
@@ -25,7 +33,7 @@ function seedIfEmpty() {
     insertType.run(code, label);
   }
 
-  // --- Master Processes ---
+  // --- Master Processes (9 manufacturing processes used across plants) ---
   const insertProcess = db.prepare('INSERT INTO master_process (code, label) VALUES (?, ?)');
   const processes = [
     ['INJ', 'Injection'],        // 1
@@ -42,7 +50,7 @@ function seedIfEmpty() {
     insertProcess.run(code, label);
   }
 
-  // --- Master Projects ---
+  // --- Master Projects (12 automotive projects across 4 OEMs) ---
   const insertProject = db.prepare(
     'INSERT INTO master_project (designation, name, description, customer, vehicle) VALUES (?, ?, ?, ?, ?)'
   );
@@ -64,7 +72,7 @@ function seedIfEmpty() {
     insertProject.run(designation, name, description, customer, vehicle);
   }
 
-  // --- Knowledge Items ---
+  // --- Knowledge Items (16 sample items with mixed statuses and types) ---
   const insertItem = db.prepare(`
     INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project_id, plant, document_link, visibility_status, derived_from_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -74,6 +82,7 @@ function seedIfEmpty() {
     INSERT INTO knowledge_item_file (knowledge_item_id, file_kind, filename_original, storage_path)
     VALUES (?, ?, ?, ?)
   `);
+  // Links items to projects for the "Documents Used" feature
   const insertProjectLink = db.prepare('INSERT INTO project_knowledge_item (project_id, knowledge_item_id) VALUES (?, ?)');
 
   const items = [
@@ -288,8 +297,10 @@ function seedIfEmpty() {
     },
   ];
 
+  // Run all inserts inside a transaction for atomicity and performance
   const seedAll = db.transaction(() => {
     for (const item of items) {
+      // Insert the knowledge item and get its auto-generated ID
       const result = insertItem.run(
         item.title, item.designation, item.date,
         item.owner, item.author, item.type_id,
@@ -298,17 +309,18 @@ function seedIfEmpty() {
       );
       const itemId = result.lastInsertRowid;
 
+      // Link this item to its associated manufacturing processes (M2M)
       for (const processId of item.processes) {
         insertItemProcess.run(itemId, processId);
       }
 
-      // Link to project
+      // Also link the item to its project for the "Documents Used" feature
       if (item.project_id) {
         insertProjectLink.run(item.project_id, itemId);
       }
     }
 
-    // Add dummy file attachments
+    // Add sample file attachment metadata (files don't physically exist in demo)
     insertFile.run(1, 'DOCUMENT', 'cooling_channel_report.pdf', 'uploads/cooling_channel_report.pdf');
     insertFile.run(1, 'IMAGE', 'mold_thermal_scan.png', 'uploads/mold_thermal_scan.png');
     insertFile.run(2, 'DOCUMENT', 'chrome_adhesion_analysis.pdf', 'uploads/chrome_adhesion_analysis.pdf');

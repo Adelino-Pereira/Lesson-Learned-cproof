@@ -1,3 +1,13 @@
+/**
+ * detail.component.ts — Knowledge item detail dialog.
+ * Opens as a Material dialog from the listing page. Features:
+ *   - View mode: displays all item metadata, processes (chips), files, derived-from link
+ *   - Edit mode: inline editing of all fields with save/cancel
+ *   - Validate: approve or reject pending items (admin/validator roles)
+ *   - Officialise: transform a Lessons-learned into Good-practice/Guide-line,
+ *     or create a new derived item (sets derived_from_id)
+ */
+
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -375,8 +385,8 @@ export class DetailDialogComponent implements OnInit {
   plants = ['Doureca Portugal', 'Dourdin Romania', 'Dourdin France', 'Durden Turkey'];
   projects: MasterProject[] = [];
 
-  private itemSnapshot: string = '';
-  private modified = false;
+  private itemSnapshot: string = '';   // JSON snapshot for edit cancel/restore
+  private modified = false;            // Track if any changes were made (for listing refresh)
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { itemId: number },
@@ -389,6 +399,7 @@ export class DetailDialogComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Load dropdown data and fetch the item detail
     this.masterData.getTypes().subscribe(t => this.types = t.filter(x => x.id !== 3 && x.id !== 4));
     this.masterData.getProcesses().subscribe(p => this.allProcesses = p);
     this.knowledgeApi.getProjects().subscribe(p => this.projects = p);
@@ -398,17 +409,20 @@ export class DetailDialogComponent implements OnInit {
     });
   }
 
+  /** Enters edit mode — takes a JSON snapshot of the item for cancel/restore */
   toggleEdit() {
     this.itemSnapshot = JSON.stringify(this.item);
     this.editing = true;
   }
 
+  /** Restores the item from the snapshot and exits edit mode */
   cancelEdit() {
     this.item = JSON.parse(this.itemSnapshot);
     this.selectedProcessIds = this.item!.processes.map(p => p.id);
     this.editing = false;
   }
 
+  /** Approves or rejects a pending item (PATCH /api/knowledge/:id/status) */
   validate(status: 'APPROVED' | 'REJECTED') {
     if (!this.item) return;
     this.validating = true;
@@ -427,6 +441,7 @@ export class DetailDialogComponent implements OnInit {
     });
   }
 
+  /** Sends the edited item data to the API and closes the dialog on success */
   saveEdit() {
     if (!this.item) return;
     const body = {
@@ -455,6 +470,7 @@ export class DetailDialogComponent implements OnInit {
     });
   }
 
+  /** Navigates to the parent item (derived-from link) by opening a new detail dialog */
   openParent(parentId: number) {
     this.dialogRef.close();
     this.dialog.open(DetailDialogComponent, {
@@ -465,12 +481,19 @@ export class DetailDialogComponent implements OnInit {
     });
   }
 
+  /**
+   * Officialise a Lessons-learned item into a Good-practice or Guide-line.
+   * Two modes:
+   *   - 'transform': changes the type of the existing item in-place
+   *   - 'create': creates a new item with the selected type, linked via derived_from_id
+   */
   confirmOfficialise(mode: 'transform' | 'create') {
     if (!this.item || !this.officialiseTypeId) return;
     this.creatingDerived = true;
     const typeLabel = this.officialiseTypeId === 4 ? 'Good-practice' : 'Guide-line';
 
     if (mode === 'transform') {
+      // Transform mode: update the existing item's type
       const body = {
         title: this.item.title,
         designation: this.item.designation,
@@ -496,6 +519,7 @@ export class DetailDialogComponent implements OnInit {
         },
       });
     } else {
+      // Create mode: create a new derived item with today's date
       const today = new Date();
       const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 

@@ -1,11 +1,24 @@
+/**
+ * KnowledgeController.js — Handles all CRUD operations for knowledge items.
+ * Provides list (with multi-criteria filtering), detail, create, update,
+ * soft-delete, status validation, and statistics aggregation.
+ */
+
 const { getDb } = require('../database');
 
 class KnowledgeController {
 
+  /**
+   * GET /api/knowledge
+   * Lists knowledge items with optional filters (title, type, process, project, etc.).
+   * Joins type, process labels, parent item (for derived), and project info.
+   * Only returns active items (is_active = 1). Results sorted by date DESC.
+   */
   static list(req, res) {
     const db = getDb();
     const { title, type, process, project_id, owner, author, plant, date_from, date_to, visibility_status } = req.query;
 
+    // Base query: join all related tables and aggregate process labels with GROUP_CONCAT
     let sql = `
       SELECT ki.*,
              mt.code  AS type_code,
@@ -26,6 +39,7 @@ class KnowledgeController {
     `;
     const params = [];
 
+    // Dynamically append WHERE clauses based on provided query parameters
     if (title) {
       sql += ' AND ki.title LIKE ?';
       params.push(`%${title}%`);
@@ -59,6 +73,7 @@ class KnowledgeController {
       params.push(date_to);
     }
     if (process) {
+      // Filter by process uses a subquery on the junction table
       sql += ' AND ki.id IN (SELECT knowledge_item_id FROM knowledge_item_process WHERE process_id = ?)';
       params.push(process);
     }
@@ -67,6 +82,7 @@ class KnowledgeController {
       params.push(visibility_status);
     }
 
+    // GROUP BY needed because of the GROUP_CONCAT on processes
     sql += ' GROUP BY ki.id ORDER BY ki.date DESC';
 
     try {
@@ -78,11 +94,16 @@ class KnowledgeController {
     }
   }
 
+  /**
+   * GET /api/knowledge/:id
+   * Returns a single knowledge item with its linked processes and file attachments.
+   */
   static getById(req, res) {
     const db = getDb();
     const { id } = req.params;
 
     try {
+      // Fetch the item with type, parent, and project info
       const item = db.prepare(`
         SELECT ki.*,
                mt.code  AS type_code,
@@ -103,6 +124,7 @@ class KnowledgeController {
         return res.status(404).json({ error: 'Item not found' });
       }
 
+      // Fetch linked processes (M2M via junction table)
       const processes = db.prepare(`
         SELECT mp.id, mp.code, mp.label
         FROM knowledge_item_process kip
@@ -110,12 +132,14 @@ class KnowledgeController {
         WHERE kip.knowledge_item_id = ?
       `).all(id);
 
+      // Fetch attached files (documents and images)
       const files = db.prepare(`
         SELECT id, file_kind, filename_original, storage_path, uploaded_at
         FROM knowledge_item_file
         WHERE knowledge_item_id = ?
       `).all(id);
 
+      // Return combined response with item + processes + files
       res.json({ ...item, processes, files });
     } catch (err) {
       console.error('[KnowledgeController.getById]', err.message);
@@ -123,15 +147,23 @@ class KnowledgeController {
     }
   }
 
+  /**
+   * POST /api/knowledge
+   * Creates a new knowledge item. Accepts multipart form data (for file uploads).
+   * New items always start with visibility_status = 'PENDING'.
+   * Also links the item to its project in the documents-used junction table.
+   */
   static create(req, res) {
     const db = getDb();
     const { title, designation, date, owner, author, type_id, project_id, plant, document_link, processes, derived_from_id } = req.body;
 
+    // Validate required fields
     if (!title || !date || !owner || !author || !type_id) {
       return res.status(400).json({ error: 'Missing required fields: title, date, owner, author, type_id' });
     }
 
     try {
+      // Insert the knowledge item (always starts as PENDING)
       const insertItem = db.prepare(`
         INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project_id, plant, document_link, visibility_status, is_active, derived_from_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 1, ?)
@@ -140,24 +172,25 @@ class KnowledgeController {
       const result = insertItem.run(title, designation || null, date, owner, author, type_id, project_id || null, plant || null, document_link || null, derived_from_id || null);
       const itemId = result.lastInsertRowid;
 
-      // Link processes (M2M)
+      // Link processes (M2M) — processes come as JSON string from FormData
       const processIds = processes ? JSON.parse(processes) : [];
       const insertProcess = db.prepare('INSERT INTO knowledge_item_process (knowledge_item_id, process_id) VALUES (?, ?)');
       for (const pid of processIds) {
         insertProcess.run(itemId, pid);
       }
 
-      // Link to project
+      // Auto-link to project for the "Documents Used" feature
       if (project_id) {
         db.prepare('INSERT OR IGNORE INTO project_knowledge_item (project_id, knowledge_item_id) VALUES (?, ?)').run(project_id, itemId);
       }
 
-      // Save file metadata
+      // Save uploaded file metadata (Multer handles actual file storage)
       if (req.files) {
         const insertFile = db.prepare(`
           INSERT INTO knowledge_item_file (knowledge_item_id, file_kind, filename_original, storage_path)
           VALUES (?, ?, ?, ?)
         `);
+        // Merge document and image arrays, tagging each with its kind
         const allFiles = [
           ...(req.files.documents || []).map(f => ({ ...f, kind: 'DOCUMENT' })),
           ...(req.files.images || []).map(f => ({ ...f, kind: 'IMAGE' })),
@@ -167,7 +200,7 @@ class KnowledgeController {
         }
       }
 
-      // Return the created item
+      // Return the newly created item
       const created = db.prepare('SELECT * FROM knowledge_item WHERE id = ?').get(itemId);
       res.status(201).json(created);
     } catch (err) {
@@ -176,6 +209,12 @@ class KnowledgeController {
     }
   }
 
+  /**
+   * PUT /api/knowledge/:id
+   * Updates an existing knowledge item.
+   * Uses a transaction to atomically update the item, replace process links,
+   * and update the project link.
+   */
   static update(req, res) {
     const db = getDb();
     const { id } = req.params;
@@ -186,12 +225,15 @@ class KnowledgeController {
     }
 
     try {
+      // Verify the item exists and is not soft-deleted
       const existing = db.prepare('SELECT id FROM knowledge_item WHERE id = ? AND is_active = 1').get(id);
       if (!existing) {
         return res.status(404).json({ error: 'Item not found' });
       }
 
+      // Wrap all updates in a transaction for atomicity
       const updateAll = db.transaction(() => {
+        // Update the main item fields
         db.prepare(`
           UPDATE knowledge_item
           SET title = ?, designation = ?, date = ?, owner = ?, author = ?,
@@ -199,7 +241,7 @@ class KnowledgeController {
           WHERE id = ?
         `).run(title, designation || null, date, owner, author, type_id, project_id || null, plant || null, document_link || null, id);
 
-        // Replace process links
+        // Replace process links: delete all existing, then re-insert
         db.prepare('DELETE FROM knowledge_item_process WHERE knowledge_item_id = ?').run(id);
         const processIds = processes || [];
         const insertProcess = db.prepare('INSERT INTO knowledge_item_process (knowledge_item_id, process_id) VALUES (?, ?)');
@@ -207,7 +249,7 @@ class KnowledgeController {
           insertProcess.run(id, pid);
         }
 
-        // Update project link
+        // Replace project link in documents-used junction
         db.prepare('DELETE FROM project_knowledge_item WHERE knowledge_item_id = ?').run(id);
         if (project_id) {
           db.prepare('INSERT OR IGNORE INTO project_knowledge_item (project_id, knowledge_item_id) VALUES (?, ?)').run(project_id, id);
@@ -216,7 +258,7 @@ class KnowledgeController {
 
       updateAll();
 
-      // Return full detail
+      // Return the updated item with type info, processes, and files
       const updated = db.prepare(`
         SELECT ki.*, mt.code AS type_code, mt.label AS type_label
         FROM knowledge_item ki
@@ -244,6 +286,11 @@ class KnowledgeController {
     }
   }
 
+  /**
+   * DELETE /api/knowledge/:id
+   * Soft-deletes an item by setting is_active = 0.
+   * The item remains in the database but is excluded from all queries.
+   */
   static delete(req, res) {
     const db = getDb();
     const { id } = req.params;
@@ -260,11 +307,17 @@ class KnowledgeController {
     }
   }
 
+  /**
+   * PATCH /api/knowledge/:id/status
+   * Updates the visibility status of an item (APPROVED or REJECTED).
+   * Used by admin/validator roles to approve or reject pending items.
+   */
   static updateStatus(req, res) {
     const db = getDb();
     const { id } = req.params;
     const { visibility_status } = req.body;
 
+    // Only allow valid status transitions
     const allowed = ['APPROVED', 'REJECTED'];
     if (!allowed.includes(visibility_status)) {
       return res.status(400).json({ error: 'visibility_status must be APPROVED or REJECTED' });
@@ -283,10 +336,18 @@ class KnowledgeController {
     }
   }
 
+  /**
+   * GET /api/knowledge/stats
+   * Returns aggregated statistics for the dashboard charts:
+   *   - byType:    count of items grouped by knowledge type
+   *   - byProcess: count of items grouped by manufacturing process
+   *   - byPlant:   count of items grouped by plant location
+   */
   static stats(req, res) {
     const db = getDb();
 
     try {
+      // Count items per knowledge type (e.g. Documentation, Lessons-learned)
       const byType = db.prepare(`
         SELECT mt.label, COUNT(ki.id) AS count
         FROM knowledge_item ki
@@ -296,6 +357,7 @@ class KnowledgeController {
         ORDER BY count DESC
       `).all();
 
+      // Count items per process (uses DISTINCT because of M2M relationship)
       const byProcess = db.prepare(`
         SELECT mp.label, COUNT(DISTINCT kip.knowledge_item_id) AS count
         FROM knowledge_item_process kip
@@ -306,6 +368,7 @@ class KnowledgeController {
         ORDER BY count DESC
       `).all();
 
+      // Count items per plant location
       const byPlant = db.prepare(`
         SELECT plant AS label, COUNT(id) AS count
         FROM knowledge_item

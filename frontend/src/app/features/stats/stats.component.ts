@@ -1,3 +1,14 @@
+/**
+ * stats.component.ts — Statistics dashboard with charts.
+ * Displays three charts powered by @swimlane/ngx-charts:
+ *   - Horizontal bar chart: items by knowledge type
+ *   - Vertical bar chart: items by manufacturing process
+ *   - Donut chart: items by plant location
+ *
+ * Data is fetched from GET /api/knowledge/stats.
+ * Only accessible to roles with 'stats:read' permission (admin, manager).
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -15,6 +26,7 @@ import { StatBlock } from '../../core/models/knowledge.model';
     <h2>Statistics</h2>
 
     <div class="charts-grid">
+      <!-- Horizontal bar chart: items grouped by knowledge type -->
       <mat-card>
         <mat-card-header>
           <mat-icon mat-card-avatar class="stat-icon">category</mat-icon>
@@ -37,6 +49,7 @@ import { StatBlock } from '../../core/models/knowledge.model';
         </mat-card-content>
       </mat-card>
 
+      <!-- Vertical bar chart: items grouped by manufacturing process -->
       <mat-card>
         <mat-card-header>
           <mat-icon mat-card-avatar class="stat-icon">settings</mat-icon>
@@ -59,6 +72,7 @@ import { StatBlock } from '../../core/models/knowledge.model';
         </mat-card-content>
       </mat-card>
 
+      <!-- Donut chart: items grouped by plant location -->
       <mat-card>
         <mat-card-header>
           <mat-icon mat-card-avatar class="stat-icon">factory</mat-icon>
@@ -104,12 +118,14 @@ import { StatBlock } from '../../core/models/knowledge.model';
   `],
 })
 export class StatsComponent implements OnInit {
+  // Chart data arrays (ngx-charts expects { name, value } format)
   chartByType: { name: string; value: number }[] = [];
   chartByProcess: { name: string; value: number }[] = [];
   chartByPlant: { name: string; value: number }[] = [];
 
   chartWidth = 500;
 
+  // Indigo color scheme matching the app's Material theme
   colorScheme: Color = {
     name: 'Indigo',
     selectable: true,
@@ -121,6 +137,7 @@ export class StatsComponent implements OnInit {
   constructor(private knowledgeApi: KnowledgeApiService) {}
 
   ngOnInit() {
+    // Fetch stats from the API and transform to chart format
     this.knowledgeApi.getStats().subscribe(stats => {
       this.chartByType = this.toChartData(stats.byType);
       this.chartByProcess = this.toChartData(stats.byProcess);
@@ -128,6 +145,7 @@ export class StatsComponent implements OnInit {
     });
   }
 
+  /** Converts StatBlock[] (label/count) to ngx-charts format (name/value) */
   private toChartData(blocks: StatBlock[]): { name: string; value: number }[] {
     return blocks.map(b => ({ name: b.label, value: b.count }));
   }

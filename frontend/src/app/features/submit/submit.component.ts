@@ -1,3 +1,14 @@
+/**
+ * submit.component.ts — Form for submitting new knowledge items.
+ * Features:
+ *   - Reactive form with validation (title, date, customer, type required)
+ *   - Material datepicker with custom yyyy/MM/dd format adapter
+ *   - Dropdowns for type, project, plant, and multi-select processes
+ *   - File upload for documents and images (via Multer on backend)
+ *   - New items are created with PENDING visibility status
+ *   - Guide-line and Good-practice types are excluded (created via officialise only)
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -12,6 +23,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { DateAdapter, MAT_DATE_FORMATS, NativeDateAdapter } from '@angular/material/core';
 
+/** Custom date adapter to display dates as yyyy/MM/dd in the datepicker */
 class YyyyMmDdAdapter extends NativeDateAdapter {
   override format(date: Date): string {
     const y = date.getFullYear();
@@ -239,12 +251,13 @@ export class SubmitComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Build the reactive form with validation rules
     this.form = this.fb.group({
       title: ['', Validators.required],
       designation: [''],
       date: [null, Validators.required],
       owner: ['', Validators.required],
-      author: [this.authService.currentUser?.name || '', Validators.required],
+      author: [this.authService.currentUser?.name || '', Validators.required],  // Pre-fill with logged-in user
       type_id: [null, Validators.required],
       project_id: [null],
       plant: [''],
@@ -252,6 +265,7 @@ export class SubmitComponent implements OnInit {
       document_link: [''],
     });
 
+    // Load master data for dropdowns; exclude Guide-line (3) and Good-practice (4) — these are created via officialise
     this.masterData.getTypes().subscribe(t => this.types = t.filter(x => x.id !== 3 && x.id !== 4));
     this.masterData.getProcesses().subscribe(p => this.processList = p);
     this.knowledgeApi.getProjects().subscribe(p => this.projects = p);
@@ -271,10 +285,12 @@ export class SubmitComponent implements OnInit {
     }
   }
 
+  /** Builds a FormData payload from the form values and files, then sends to the API */
   onSubmit() {
     if (this.form.invalid) return;
     this.submitting = true;
 
+    // Use FormData to support multipart file upload alongside text fields
     const formData = new FormData();
     const values = this.form.value;
 

@@ -1,3 +1,9 @@
+/**
+ * login.component.ts — Mock login page for the prototype.
+ * Allows the user to enter a name and select a role (admin, power-user, etc.).
+ * In production DCS, this would be replaced by JWT-based authentication.
+ */
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
