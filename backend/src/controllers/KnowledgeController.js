@@ -4,7 +4,7 @@ class KnowledgeController {
 
   static list(req, res) {
     const db = getDb();
-    const { type, process, project_id, owner, author, plant, date_from, date_to, visibility_status } = req.query;
+    const { title, type, process, project_id, owner, author, plant, date_from, date_to, visibility_status } = req.query;
 
     let sql = `
       SELECT ki.*,
@@ -26,6 +26,10 @@ class KnowledgeController {
     `;
     const params = [];
 
+    if (title) {
+      sql += ' AND ki.title LIKE ?';
+      params.push(`%${title}%`);
+    }
     if (type) {
       sql += ' AND ki.type_id = ?';
       params.push(type);

@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -30,7 +29,7 @@ import { DetailDialogComponent } from '../detail/detail.component';
     CommonModule, FormsModule,
     MatTableModule, MatPaginatorModule, MatSortModule,
     MatButtonModule, MatIconModule, MatSelectModule,
-    MatFormFieldModule, MatInputModule, MatExpansionModule,
+    MatFormFieldModule, MatInputModule,
     MatChipsModule, MatBadgeModule, MatDialogModule,
     MatSnackBarModule, MatTooltipModule,
   ],
@@ -56,70 +55,65 @@ import { DetailDialogComponent } from '../detail/detail.component';
       </div>
     }
 
-    <mat-accordion>
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>filter_list</mat-icon>&nbsp; Filters
-          </mat-panel-title>
-        </mat-expansion-panel-header>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search-box">
+      <mat-label>Search title</mat-label>
+      <input matInput [(ngModel)]="filters.title" (ngModelChange)="applyFilters()" placeholder="Search...">
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
 
-        <div class="filters-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Type</mat-label>
-            <mat-select [(ngModel)]="filters.type" (selectionChange)="applyFilters()">
-              <option></option>
-              <mat-option [value]="undefined">All</mat-option>
-              @for (t of types; track t.id) {
-                <mat-option [value]="t.id">{{ t.label }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+    <div class="filters-grid">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Type</mat-label>
+        <mat-select [(ngModel)]="filters.type" (selectionChange)="applyFilters()">
+          <mat-option [value]="undefined">All</mat-option>
+          @for (t of types; track t.id) {
+            <mat-option [value]="t.id">{{ t.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Process</mat-label>
-            <mat-select [(ngModel)]="filters.process" (selectionChange)="applyFilters()">
-              <mat-option [value]="undefined">All</mat-option>
-              @for (p of processes; track p.id) {
-                <mat-option [value]="p.id">{{ p.label }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Process</mat-label>
+        <mat-select [(ngModel)]="filters.process" (selectionChange)="applyFilters()">
+          <mat-option [value]="undefined">All</mat-option>
+          @for (p of processes; track p.id) {
+            <mat-option [value]="p.id">{{ p.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Project</mat-label>
-            <mat-select [(ngModel)]="filters.project_id" (selectionChange)="applyFilters()">
-              <mat-option [value]="undefined">All</mat-option>
-              @for (proj of projects; track proj.id) {
-                <mat-option [value]="proj.id">{{ proj.name }} ({{ proj.designation }})</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Project</mat-label>
+        <mat-select [(ngModel)]="filters.project_id" (selectionChange)="applyFilters()">
+          <mat-option [value]="undefined">All</mat-option>
+          @for (proj of projects; track proj.id) {
+            <mat-option [value]="proj.id">{{ proj.name }} ({{ proj.designation }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Customer</mat-label>
-            <input matInput [(ngModel)]="filters.owner" (change)="applyFilters()">
-          </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Customer</mat-label>
+        <input matInput [(ngModel)]="filters.owner" (change)="applyFilters()">
+      </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Plant</mat-label>
-            <input matInput [(ngModel)]="filters.plant" (change)="applyFilters()">
-          </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Plant</mat-label>
+        <input matInput [(ngModel)]="filters.plant" (change)="applyFilters()">
+      </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Date From</mat-label>
-            <input matInput type="date" [(ngModel)]="filters.date_from" (change)="applyFilters()">
-          </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Date From</mat-label>
+        <input matInput type="date" [(ngModel)]="filters.date_from" (change)="applyFilters()">
+      </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Date To</mat-label>
-            <input matInput type="date" [(ngModel)]="filters.date_to" (change)="applyFilters()">
-          </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Date To</mat-label>
+        <input matInput type="date" [(ngModel)]="filters.date_to" (change)="applyFilters()">
+      </mat-form-field>
 
-          <button mat-stroked-button (click)="clearFilters()">Clear Filters</button>
-        </div>
-      </mat-expansion-panel>
-    </mat-accordion>
+      <button mat-stroked-button (click)="clearFilters()">Clear Filters</button>
+    </div>
 
     <div class="table-container">
       <table mat-table [dataSource]="dataSource" matSort class="full-width">
@@ -200,14 +194,27 @@ import { DetailDialogComponent } from '../detail/detail.component';
     </div>
   `,
   styles: [`
+    :host ::ng-deep .mat-mdc-form-field-infix {
+      min-height: 36px !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+    :host ::ng-deep .mat-mdc-text-field-wrapper {
+      padding: 0 12px !important;
+    }
+    .search-box {
+      width: 100%;
+      margin-bottom: 4px;
+    }
     .filters-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 6px;
       align-items: center;
+      margin-bottom: 4px;
     }
     .table-container {
-      margin-top: 16px;
+      margin-top: 8px;
       overflow: auto;
     }
     .full-width {

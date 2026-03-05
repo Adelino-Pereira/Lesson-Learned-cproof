@@ -77,6 +77,7 @@ export interface StatsResponse {
 }
 
 export interface KnowledgeFilters {
+  title?: string;
   type?: number;
   process?: number;
   project_id?: number;
