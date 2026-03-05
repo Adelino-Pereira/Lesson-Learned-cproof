@@ -40,6 +40,7 @@ import {
   MasterProcess,
   MasterProject,
 } from "../../core/models/knowledge.model";
+import { DetailDialogComponent } from "../detail/detail.component";
 
 // ---- Add Document Dialog ----
 @Component({
@@ -452,7 +453,9 @@ export class AddDocumentDialogComponent implements OnInit {
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"
+                  class="clickable-row"
+                  (click)="goToDetail(row.id)"></tr>
             </table>
           } @else {
             <p class="muted">No documents linked to this project.</p>
@@ -477,6 +480,12 @@ export class AddDocumentDialogComponent implements OnInit {
       }
       .full-width {
         width: 100%;
+      }
+      .clickable-row {
+        cursor: pointer;
+      }
+      .clickable-row:hover {
+        background: rgba(0, 0, 0, 0.04);
       }
       .muted {
         color: #999;
@@ -590,6 +599,21 @@ export class DocumentsUsedComponent implements OnInit {
     this.knowledgeApi
       .getDocumentsUsed(this.selectedProject.id)
       .subscribe((items) => (this.items = items));
+  }
+
+  /** Opens the detail dialog for a knowledge item; refreshes the table if the item was modified */
+  goToDetail(id: number) {
+    const ref = this.dialog.open(DetailDialogComponent, {
+      width: '90vw',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      data: { itemId: id },
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result === 'updated') {
+        this.loadLinkedDocuments();
+      }
+    });
   }
 
   /** Opens the Add Document dialog; refreshes the linked items table on close */
