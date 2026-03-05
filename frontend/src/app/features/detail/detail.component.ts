@@ -27,6 +27,7 @@ import { KnowledgeApiService } from '../../core/services/knowledge-api.service';
 import { MasterDataService } from '../../core/services/master-data.service';
 import { PermissionService } from '../../core/services/permission.service';
 import { KnowledgeItemDetail, MasterType, MasterProcess, MasterProject } from '../../core/models/knowledge.model';
+import { ConfirmDialogComponent, ConfirmDialogModel } from './confirm-dialog.component';
 
 @Component({
   selector: 'app-detail-dialog',
@@ -422,22 +423,36 @@ export class DetailDialogComponent implements OnInit {
     this.editing = false;
   }
 
-  /** Approves or rejects a pending item (PATCH /api/knowledge/:id/status) */
+  /** Approves or rejects a pending item — shows confirmation dialog first */
   validate(status: 'APPROVED' | 'REJECTED') {
     if (!this.item) return;
-    this.validating = true;
-    this.knowledgeApi.updateStatus(this.item.id, status).subscribe({
-      next: (updated) => {
-        this.item!.visibility_status = updated.visibility_status;
-        const label = status === 'APPROVED' ? 'validated' : 'rejected';
-        this.snackBar.open(`Item ${label} successfully`, 'Close', { duration: 3000 });
-        this.validating = false;
-        this.modified = true;
-      },
-      error: () => {
-        this.snackBar.open('Failed to update status', 'Close', { duration: 3000 });
-        this.validating = false;
-      },
+
+    const action = status === 'APPROVED' ? 'approve' : 'reject';
+    const dialogData = new ConfirmDialogModel(
+      'Confirmation',
+      `Are you sure you want to ${action} this item?`,
+    );
+
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: dialogData,
+    }).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+
+      this.validating = true;
+      this.knowledgeApi.updateStatus(this.item!.id, status).subscribe({
+        next: (updated) => {
+          this.item!.visibility_status = updated.visibility_status;
+          const label = status === 'APPROVED' ? 'validated' : 'rejected';
+          this.snackBar.open(`Item ${label} successfully`, 'Close', { duration: 3000 });
+          this.validating = false;
+          this.modified = true;
+        },
+        error: () => {
+          this.snackBar.open('Failed to update status', 'Close', { duration: 3000 });
+          this.validating = false;
+        },
+      });
     });
   }
 
@@ -483,73 +498,89 @@ export class DetailDialogComponent implements OnInit {
 
   /**
    * Officialise a Lessons-learned item into a Good-practice or Guide-line.
+   * Shows a confirmation dialog before executing.
    * Two modes:
    *   - 'transform': changes the type of the existing item in-place
    *   - 'create': creates a new item with the selected type, linked via derived_from_id
    */
   confirmOfficialise(mode: 'transform' | 'create') {
     if (!this.item || !this.officialiseTypeId) return;
-    this.creatingDerived = true;
     const typeLabel = this.officialiseTypeId === 4 ? 'Good-practice' : 'Guide-line';
 
-    if (mode === 'transform') {
-      // Transform mode: update the existing item's type
-      const body = {
-        title: this.item.title,
-        designation: this.item.designation,
-        date: this.item.date,
-        owner: this.item.owner,
-        author: this.item.author,
-        type_id: this.officialiseTypeId,
-        project_id: this.item.project_id,
-        plant: this.item.plant,
-        document_link: this.item.document_link,
-        processes: this.item.processes.map(p => p.id),
-      };
-      this.knowledgeApi.update(this.item.id, body).subscribe({
-        next: () => {
-          this.snackBar.open(`Item transformed into ${typeLabel}`, 'Close', { duration: 3000 });
-          this.creatingDerived = false;
-          this.officialising = false;
-          this.dialogRef.close('updated');
-        },
-        error: () => {
-          this.snackBar.open('Failed to transform item', 'Close', { duration: 3000 });
-          this.creatingDerived = false;
-        },
-      });
-    } else {
-      // Create mode: create a new derived item with today's date
-      const today = new Date();
-      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    // Build confirmation message based on the mode
+    const message = mode === 'transform'
+      ? `Are you sure you want to transform this item into ${typeLabel}?`
+      : `Are you sure you want to create a new ${typeLabel} from this item?`;
 
-      const body = {
-        title: this.item.title,
-        designation: this.item.designation,
-        date: dateStr,
-        owner: this.item.owner,
-        author: this.item.author,
-        type_id: this.officialiseTypeId,
-        project_id: this.item.project_id,
-        plant: this.item.plant,
-        document_link: this.item.document_link,
-        processes: JSON.stringify(this.item.processes.map(p => p.id)),
-        derived_from_id: this.item.id,
-      };
+    const dialogData = new ConfirmDialogModel('Confirmation', message);
 
-      this.knowledgeApi.createJson(body).subscribe({
-        next: () => {
-          this.snackBar.open(`New ${typeLabel} created from this item`, 'Close', { duration: 3000 });
-          this.creatingDerived = false;
-          this.officialising = false;
-          this.dialogRef.close('updated');
-        },
-        error: () => {
-          this.snackBar.open('Failed to create derived item', 'Close', { duration: 3000 });
-          this.creatingDerived = false;
-        },
-      });
-    }
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: dialogData,
+    }).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+
+      this.creatingDerived = true;
+
+      if (mode === 'transform') {
+        // Transform mode: update the existing item's type
+        const body = {
+          title: this.item!.title,
+          designation: this.item!.designation,
+          date: this.item!.date,
+          owner: this.item!.owner,
+          author: this.item!.author,
+          type_id: this.officialiseTypeId!,
+          project_id: this.item!.project_id,
+          plant: this.item!.plant,
+          document_link: this.item!.document_link,
+          processes: this.item!.processes.map(p => p.id),
+        };
+        this.knowledgeApi.update(this.item!.id, body).subscribe({
+          next: () => {
+            this.snackBar.open(`Item transformed into ${typeLabel}`, 'Close', { duration: 3000 });
+            this.creatingDerived = false;
+            this.officialising = false;
+            this.dialogRef.close('updated');
+          },
+          error: () => {
+            this.snackBar.open('Failed to transform item', 'Close', { duration: 3000 });
+            this.creatingDerived = false;
+          },
+        });
+      } else {
+        // Create mode: create a new derived item with today's date
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const body = {
+          title: this.item!.title,
+          designation: this.item!.designation,
+          date: dateStr,
+          owner: this.item!.owner,
+          author: this.item!.author,
+          type_id: this.officialiseTypeId!,
+          project_id: this.item!.project_id,
+          plant: this.item!.plant,
+          document_link: this.item!.document_link,
+          processes: JSON.stringify(this.item!.processes.map(p => p.id)),
+          derived_from_id: this.item!.id,
+        };
+
+        this.knowledgeApi.createJson(body).subscribe({
+          next: () => {
+            this.snackBar.open(`New ${typeLabel} created from this item`, 'Close', { duration: 3000 });
+            this.creatingDerived = false;
+            this.officialising = false;
+            this.dialogRef.close('updated');
+          },
+          error: () => {
+            this.snackBar.open('Failed to create derived item', 'Close', { duration: 3000 });
+            this.creatingDerived = false;
+          },
+        });
+      }
+    });
   }
 
   close() {
