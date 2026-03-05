@@ -247,7 +247,7 @@ import { KnowledgeItemDetail, MasterType, MasterProcess, MasterProject } from '.
               <mat-icon>cancel</mat-icon> REJECT
             </button>
           }
-          @if (item.type_id === 6 && !item.derived_from_id && permissions.hasPermission('knowledge:edit')) {
+          @if (item.type_id === 6 && !item.derived_from_id && item.visibility_status === 'APPROVED' && permissions.hasPermission('knowledge:edit')) {
             @if (officialising) {
               <mat-form-field appearance="outline" class="officialise-select">
                 <mat-label>Target type</mat-label>
