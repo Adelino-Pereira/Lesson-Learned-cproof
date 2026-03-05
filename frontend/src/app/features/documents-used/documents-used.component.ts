@@ -47,18 +47,26 @@ import {
     MatInputModule,
   ],
   template: `
-    <h2 mat-dialog-title>Add Documents to {{ data.projectName }}</h2>
+    <h2 mat-dialog-title>Add Lessons to {{ data.projectName }}</h2>
     <mat-dialog-content>
       <div class="filter-row">
         <mat-form-field appearance="outline" class="filter-field search-field">
           <mat-label>Search title</mat-label>
-          <input matInput [(ngModel)]="filterTitle" (ngModelChange)="applyFilters()" placeholder="Search...">
+          <input
+            matInput
+            [(ngModel)]="filterTitle"
+            (ngModelChange)="applyFilters()"
+            placeholder="Search..."
+          />
           <mat-icon matPrefix>search</mat-icon>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Type</mat-label>
-          <mat-select [(ngModel)]="filterType" (selectionChange)="applyFilters()">
+          <mat-select
+            [(ngModel)]="filterType"
+            (selectionChange)="applyFilters()"
+          >
             <mat-option [value]="null">All</mat-option>
             @for (t of types; track t.id) {
               <mat-option [value]="t.id">{{ t.label }}</mat-option>
@@ -68,12 +76,20 @@ import {
 
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Designation</mat-label>
-          <input matInput [(ngModel)]="filterDesignation" (ngModelChange)="applyFilters()" placeholder="Filter...">
+          <input
+            matInput
+            [(ngModel)]="filterDesignation"
+            (ngModelChange)="applyFilters()"
+            placeholder="Filter..."
+          />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Processes</mat-label>
-          <mat-select [(ngModel)]="filterProcess" (selectionChange)="applyFilters()">
+          <mat-select
+            [(ngModel)]="filterProcess"
+            (selectionChange)="applyFilters()"
+          >
             <mat-option [value]="null">All</mat-option>
             @for (p of processList; track p.id) {
               <mat-option [value]="p.label">{{ p.label }}</mat-option>
@@ -210,7 +226,8 @@ export class AddDocumentDialogComponent implements OnInit {
   filterProcess: string | null = null;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { projectId: number; projectName: string },
+    @Inject(MAT_DIALOG_DATA)
+    public data: { projectId: number; projectName: string },
     private dialogRef: MatDialogRef<AddDocumentDialogComponent>,
     private knowledgeApi: KnowledgeApiService,
     private masterData: MasterDataService,
@@ -229,17 +246,27 @@ export class AddDocumentDialogComponent implements OnInit {
 
   applyFilters() {
     this.filteredItems = this.items.filter((item) => {
-      if (this.filterTitle && !item.title.toLowerCase().includes(this.filterTitle.toLowerCase())) {
+      if (
+        this.filterTitle &&
+        !item.title.toLowerCase().includes(this.filterTitle.toLowerCase())
+      ) {
         return false;
       }
       if (this.filterType != null && item.type_id !== this.filterType) {
         return false;
       }
-      if (this.filterDesignation && !(item.designation || "").toLowerCase().includes(this.filterDesignation.toLowerCase())) {
+      if (
+        this.filterDesignation &&
+        !(item.designation || "")
+          .toLowerCase()
+          .includes(this.filterDesignation.toLowerCase())
+      ) {
         return false;
       }
       if (this.filterProcess) {
-        const labels = (item.process_labels || "").split(",").map((l) => l.trim());
+        const labels = (item.process_labels || "")
+          .split(",")
+          .map((l) => l.trim());
         if (!labels.includes(this.filterProcess)) {
           return false;
         }
@@ -264,7 +291,10 @@ export class AddDocumentDialogComponent implements OnInit {
     let completed = 0;
     for (const change of this.changes) {
       const action$ = change.add
-        ? this.knowledgeApi.linkDocumentToProject(this.data.projectId, change.id)
+        ? this.knowledgeApi.linkDocumentToProject(
+            this.data.projectId,
+            change.id,
+          )
         : this.knowledgeApi.unlinkDocumentFromProject(
             this.data.projectId,
             change.id,
@@ -319,25 +349,31 @@ export class AddDocumentDialogComponent implements OnInit {
     <div class="controls-row">
       <mat-form-field appearance="outline" class="project-select">
         <mat-label>Select Project</mat-label>
-        <input matInput
+        <input
+          matInput
           [formControl]="searchControl"
           [matAutocomplete]="projectAuto"
-          placeholder="Search by name, customer, vehicle...">
+          placeholder="Search by name, customer, vehicle..."
+        />
         <mat-icon matSuffix>search</mat-icon>
         @if (selectedProject) {
           <button matSuffix mat-icon-button (click)="clearProject($event)">
             <mat-icon>close</mat-icon>
           </button>
         }
-        <mat-autocomplete #projectAuto="matAutocomplete"
+        <mat-autocomplete
+          #projectAuto="matAutocomplete"
           [displayWith]="displayProject"
-          (optionSelected)="onProjectSelected($event)">
+          (optionSelected)="onProjectSelected($event)"
+        >
           @for (group of filteredGroups; track group.customer) {
             <mat-optgroup [label]="group.customer">
               @for (proj of group.projects; track proj.id) {
                 <mat-option [value]="proj">
                   <div class="option-line1">{{ proj.name }}</div>
-                  <div class="option-line2">{{ proj.vehicle }} &middot; {{ proj.designation }}</div>
+                  <div class="option-line2">
+                    {{ proj.vehicle }} &middot; {{ proj.designation }}
+                  </div>
                 </mat-option>
               }
             </mat-optgroup>
@@ -347,7 +383,7 @@ export class AddDocumentDialogComponent implements OnInit {
 
       @if (selectedProject && canEdit) {
         <button mat-raised-button color="primary" (click)="openAddDialog()">
-          <mat-icon>add</mat-icon> Add Documents
+          <mat-icon>add</mat-icon> Add Lessons
         </button>
       }
     </div>
