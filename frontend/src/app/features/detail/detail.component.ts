@@ -565,6 +565,7 @@ export class DetailDialogComponent implements OnInit {
           document_link: this.item!.document_link,
           processes: JSON.stringify(this.item!.processes.map(p => p.id)),
           derived_from_id: this.item!.id,
+          visibility_status: 'APPROVED',
         };
 
         this.knowledgeApi.createJson(body).subscribe({

@@ -155,21 +155,25 @@ class KnowledgeController {
    */
   static create(req, res) {
     const db = getDb();
-    const { title, designation, date, owner, author, type_id, project_id, plant, document_link, processes, derived_from_id } = req.body;
+    const { title, designation, date, owner, author, type_id, project_id, plant, document_link, processes, derived_from_id, visibility_status } = req.body;
 
     // Validate required fields
     if (!title || !date || !owner || !author || !type_id) {
       return res.status(400).json({ error: 'Missing required fields: title, date, owner, author, type_id' });
     }
 
+    // Allow explicit status for officialised items; default to PENDING
+    const validStatuses = ['PENDING', 'APPROVED', 'REJECTED'];
+    const status = validStatuses.includes(visibility_status) ? visibility_status : 'PENDING';
+
     try {
-      // Insert the knowledge item (always starts as PENDING)
+      // Insert the knowledge item
       const insertItem = db.prepare(`
         INSERT INTO knowledge_item (title, designation, date, owner, author, type_id, project_id, plant, document_link, visibility_status, is_active, derived_from_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 1, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
       `);
 
-      const result = insertItem.run(title, designation || null, date, owner, author, type_id, project_id || null, plant || null, document_link || null, derived_from_id || null);
+      const result = insertItem.run(title, designation || null, date, owner, author, type_id, project_id || null, plant || null, document_link || null, status, derived_from_id || null);
       const itemId = result.lastInsertRowid;
 
       // Link processes (M2M) — processes come as JSON string from FormData
